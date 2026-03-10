@@ -8,8 +8,11 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      max-width: 520px; margin: 0 auto; padding: 20px 16px 40px;
-      background: #0d1117; color: #c9d1d9;
+      max-width: 560px;
+      margin: 0 auto;
+      padding: 20px 16px 40px;
+      background: #0d1117;
+      color: #c9d1d9;
     }
 
     .header { text-align: center; margin-bottom: 24px; }
@@ -17,356 +20,749 @@
     .header .step { font-size: 12px; color: #8b949e; }
 
     .back-btn {
-      background: none; border: 1px solid #30363d; color: #8b949e;
-      padding: 6px 14px; border-radius: 6px; cursor: pointer;
-      font-size: 13px; margin-bottom: 20px;
+      background: none;
+      border: 1px solid #30363d;
+      color: #8b949e;
+      padding: 6px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      margin-bottom: 18px;
     }
+
     .back-btn:hover { border-color: #58a6ff; color: #58a6ff; }
 
-    /* 时间线预览 */
-    .timeline-preview {
-      background: #161b22; border-radius: 8px; padding: 16px; margin-bottom: 20px;
+    .section {
+      background: #161b22;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 14px;
     }
-    .timeline-preview h3 { font-size: 13px; color: #58a6ff; margin-bottom: 12px; }
-    .tl-item {
-      display: flex; gap: 10px; align-items: baseline;
-      font-size: 13px; padding: 3px 0;
-    }
-    .tl-time { color: #8b949e; min-width: 42px; font-variant-numeric: tabular-nums; }
-    .tl-text { color: #c9d1d9; }
-    .tl-supplement { color: #3fb950; font-style: italic; }
-    .tl-tag {
-      font-size: 10px; padding: 1px 6px; border-radius: 10px;
-      margin-left: 6px; vertical-align: middle;
-    }
-    .tag-blank  { background: #3d1f1f; color: #f85149; }
-    .tag-vague  { background: #3d2e1f; color: #d29922; }
-    .tag-deep   { background: #1f2d3d; color: #58a6ff; }
 
-    /* 追问卡片 */
-    .no-questions {
-      background: #161b22; border-radius: 8px; padding: 20px;
-      text-align: center; color: #3fb950; margin-bottom: 20px;
+    .section-title {
+      font-size: 13px;
+      color: #58a6ff;
+      margin-bottom: 10px;
+      font-weight: 600;
     }
-    .no-questions p { font-size: 14px; }
+
+    .hint {
+      font-size: 12px;
+      color: #8b949e;
+      line-height: 1.6;
+    }
+
+    .timeline-item {
+      display: flex;
+      gap: 10px;
+      align-items: baseline;
+      border-bottom: 1px solid #21262d;
+      padding: 6px 0;
+      font-size: 13px;
+    }
+
+    .timeline-item:last-child { border-bottom: none; }
+
+    .timeline-time {
+      color: #8b949e;
+      min-width: 84px;
+      font-variant-numeric: tabular-nums;
+      flex-shrink: 0;
+    }
+
+    .timeline-content { flex: 1; color: #c9d1d9; line-height: 1.45; }
+
+    .tag {
+      display: inline-block;
+      font-size: 11px;
+      color: #79c0ff;
+      background: #1f3244;
+      border-radius: 10px;
+      padding: 1px 8px;
+      margin-right: 6px;
+      vertical-align: middle;
+    }
+
+    .supplement {
+      color: #3fb950;
+    }
 
     .question-card {
-      background: #161b22; border-radius: 8px; padding: 16px;
-      margin-bottom: 14px; border-left: 3px solid #30363d;
+      background: #161b22;
+      border-radius: 8px;
+      padding: 14px;
+      margin-bottom: 12px;
+      border-left: 3px solid #30363d;
     }
-    .question-card.blank  { border-left-color: #f85149; }
-    .question-card.vague  { border-left-color: #d29922; }
-    .question-card.deep   { border-left-color: #58a6ff; }
 
-    .q-label { font-size: 12px; color: #8b949e; margin-bottom: 6px; }
-    .q-text  { font-size: 14px; color: #c9d1d9; margin-bottom: 12px; line-height: 1.5; }
+    .question-card.missing_time { border-left-color: #f85149; }
+    .question-card.gap_fill { border-left-color: #d29922; }
+    .question-card.vague_detail,
+    .question-card.short_detail,
+    .question-card.deep_output { border-left-color: #58a6ff; }
+    .question-card.missing_tag { border-left-color: #8b949e; }
 
-    .options { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
-    .option-btn {
-      background: #21262d; border: 1px solid #30363d;
-      color: #c9d1d9; padding: 9px 12px; border-radius: 6px;
-      cursor: pointer; text-align: left; font-size: 13px; transition: all 0.15s;
+    .q-label {
+      font-size: 12px;
+      color: #8b949e;
+      margin-bottom: 6px;
     }
-    .option-btn:hover  { border-color: #58a6ff; }
-    .option-btn.selected { background: #1f3244; border-color: #58a6ff; color: #79c0ff; }
 
-    .custom-input {
-      width: 100%; background: #21262d; border: 1px solid #30363d;
-      color: #c9d1d9; padding: 9px 10px; border-radius: 6px; font-size: 13px;
-      margin-top: 4px;
+    .q-text {
+      font-size: 14px;
+      line-height: 1.5;
+      margin-bottom: 8px;
     }
-    .custom-input:focus { outline: none; border-color: #58a6ff; }
+
+    .q-input {
+      width: 100%;
+      background: #21262d;
+      border: 1px solid #30363d;
+      color: #c9d1d9;
+      padding: 9px 10px;
+      border-radius: 6px;
+      font-size: 13px;
+    }
+
+    .q-input:focus {
+      outline: none;
+      border-color: #58a6ff;
+    }
+
+    .q-actions {
+      margin-top: 7px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
 
     .skip-link {
-      font-size: 12px; color: #6e7681; cursor: pointer;
-      text-decoration: underline; display: inline-block; margin-top: 4px;
+      font-size: 12px;
+      color: #8b949e;
+      cursor: pointer;
+      text-decoration: underline;
+      user-select: none;
     }
-    .skip-link:hover { color: #8b949e; }
-    .skipped { opacity: 0.4; }
 
-    /* 提交 */
-    .submit-btn {
-      width: 100%; background: #238636; color: white;
-      border: none; padding: 15px; border-radius: 8px;
-      font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 8px;
+    .skip-link:hover { color: #c9d1d9; }
+
+    .skip-state {
+      font-size: 12px;
+      color: #6e7681;
     }
+
+    .no-questions {
+      text-align: center;
+      color: #3fb950;
+      padding: 18px 10px;
+      background: #161b22;
+      border-radius: 8px;
+      margin-bottom: 14px;
+    }
+
+    .submit-btn {
+      width: 100%;
+      background: #238636;
+      color: #fff;
+      border: none;
+      padding: 15px;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 4px;
+    }
+
     .submit-btn:hover { background: #2ea043; }
     .submit-btn:disabled { background: #21262d; color: #6e7681; cursor: not-allowed; }
 
-    /* 成功 */
-    .success { text-align: center; padding: 60px 20px; display: none; }
-    .success h2 { color: #3fb950; font-size: 22px; margin-bottom: 10px; }
-    .success p  { color: #8b949e; font-size: 14px; margin-bottom: 20px; }
-    .report-btn {
-      background: #1f6feb; color: white; border: none;
-      padding: 12px 28px; border-radius: 8px; font-size: 15px;
-      cursor: pointer; font-weight: bold;
-    }
-    .report-btn:hover { background: #388bfd; }
-
     .error-msg {
-      background: #3d1f1f; border: 1px solid #f85149; border-radius: 8px;
-      padding: 16px; text-align: center; display: none;
+      background: #3d1f1f;
+      border: 1px solid #f85149;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 10px;
+      color: #f85149;
+      display: none;
+      font-size: 13px;
     }
-    .error-msg p { color: #f85149; font-size: 14px; margin-bottom: 10px; }
+
+    .success {
+      text-align: center;
+      padding: 48px 20px;
+      display: none;
+    }
+
+    .success h2 {
+      color: #3fb950;
+      font-size: 22px;
+      margin-bottom: 10px;
+    }
+
+    .success p {
+      color: #8b949e;
+      font-size: 14px;
+      margin-bottom: 18px;
+    }
+
+    .report-btn {
+      background: #1f6feb;
+      color: #fff;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .report-btn:hover { background: #388bfd; }
   </style>
 </head>
 <body>
   <div class="header">
     <h1>🔍 补充完善</h1>
-    <div class="step">第 2 步 / 共 2 步 · 填补时间空白</div>
+    <div class="step">第 2 步 / 共 2 步 · 自动补全不清楚的地方</div>
   </div>
 
   <button class="back-btn" onclick="history.back()">← 返回修改</button>
 
-  <!-- 时间线预览 -->
-  <div class="timeline-preview">
-    <h3>📋 你的时间线</h3>
+  <div class="section">
+    <div class="section-title">📋 当前解析结果（可在下方继续补）</div>
     <div id="timelinePreview"></div>
   </div>
 
-  <!-- 追问区 -->
-  <div id="questionsArea"></div>
-
-  <div class="error-msg" id="errorMsg">
-    <p id="errorText">提交失败，请检查网络后重试</p>
-    <button class="submit-btn" style="width:auto;padding:8px 20px;" onclick="doSubmit()">重试</button>
+  <div class="section">
+    <div class="section-title">🧠 AI 发现可补充点</div>
+    <div class="hint" style="margin-bottom:10px;">不是都必须回答。想跳过的可以直接跳过，先保证你愿意记录下来的内容被保存。</div>
+    <div id="questionsArea"></div>
   </div>
 
-  <button class="submit-btn" id="submitBtn" onclick="doSubmit()">✅ 完成，保存记录</button>
+  <div class="error-msg" id="errorMsg"></div>
+  <button class="submit-btn" id="submitBtn" onclick="doSubmit()">✅ 完成并保存</button>
 
-  <!-- 成功状态 -->
   <div class="success" id="successView">
-    <h2>✅ 记录已保存！</h2>
+    <h2>✅ 记录已保存</h2>
     <p id="successDate"></p>
-    <button class="report-btn" id="reportBtn" onclick="goReport()">📊 查看今日分析</button>
+    <button class="report-btn" onclick="goReport()">📊 查看今日分析</button>
   </div>
 
   <script>
-    // ── 读取草稿 ──────────────────────────────────────────────
     const draft = JSON.parse(sessionStorage.getItem('diary-draft') || 'null');
     if (!draft) {
-      document.body.innerHTML = '<div style="text-align:center;padding:60px;color:#f85149;">没有找到记录数据，请<a href="/" style="color:#58a6ff;">返回重新填写</a></div>';
-      throw new Error('no draft');
+      document.body.innerHTML = '<div style="text-align:center;padding:60px;color:#f85149;">没有找到记录数据，请 <a href="/" style="color:#58a6ff;">返回重填</a></div>';
+      throw new Error('No draft data');
     }
 
-    const { date, entries, mood, insight, tomorrow } = draft;
+    const { date, rawText, quickTimeline, mood, insight, tomorrow } = draft;
 
-    // ── 渲染时间线预览 ────────────────────────────────────────
-    function renderPreview(entries) {
-      const el = document.getElementById('timelinePreview');
-      el.innerHTML = entries.map(e => `
-        <div class="tl-item">
-          <span class="tl-time">${e.time}</span>
-          <span class="tl-text ${e.supplement ? 'tl-supplement' : ''}">${e.supplement ? '[补充] ' : ''}${e.text}</span>
-        </div>
-      `).join('');
+    const VAGUE_PATTERNS = [/继续/, /推进/, /处理/, /搞/, /弄/, /忙/, /搞定/, /想了想/, /看了看/, /聊了聊/, /进展缓慢/, /一些/];
+    const DEEP_PATTERNS = [/工作/, /开发/, /写代码/, /编程/, /学习/, /研究/, /规划/, /复盘/, /设计/, /debug/, /修复/i];
+
+    const answers = {};
+    const skipped = {};
+
+    function normalizeTime(raw) {
+      if (!raw) return null;
+      const m = String(raw).trim().replace(/：/g, ':').match(/^(\d{1,2}):(\d{2})$/);
+      if (!m) return null;
+      const h = Number(m[1]);
+      const mm = Number(m[2]);
+      if (h < 0 || h > 23 || mm < 0 || mm > 59) return null;
+      return `${String(h).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
     }
-    renderPreview(entries);
 
-    // ── diary-builder 分析逻辑 ────────────────────────────────
-    const VAGUE_PATTERNS = [
-      /继续/, /弄完/, /排队/, /玩/, /搞定/, /处理/, /忙/, /弄/, /做了点/,
-      /随便/, /逛/, /看看/, /聊/, /待着/, /休息一下/
-    ];
-    const DEEP_PATTERNS = [
-      /写代码/, /编程/, /开发/, /学习/, /阅读/, /写作/, /设计/, /研究/,
-      /调试/, /debug/, /创作/, /复习/, /练习/
-    ];
-    // 睡眠时段：不追问
-    function isSleepGap(startHH, endHH) {
-      // 跨越 23:00-08:00 的长空白视为睡眠
-      if (endHH - startHH >= 6) {
-        if (startHH >= 22 || endHH <= 9) return true;
+    function toMin(time) {
+      const t = normalizeTime(time);
+      if (!t) return null;
+      const [h, m] = t.split(':').map(Number);
+      return h * 60 + m;
+    }
+
+    function parseTimeExpr(text) {
+      if (!text) return null;
+      const cleaned = text.trim().replace(/：/g, ':').replace(/\s+/g, '');
+      const m = cleaned.match(/^(\d{1,2}:\d{2})(?:[-–—~～](\d{1,2}:\d{2}))?$/);
+      if (!m) return null;
+      const start = normalizeTime(m[1]);
+      const end = m[2] ? normalizeTime(m[2]) : null;
+      if (!start) return null;
+      if (end && toMin(end) <= toMin(start)) return null;
+      return { start, end, label: end ? `${start}–${end}` : start };
+    }
+
+    function isSleepGap(startMin, endMin) {
+      if (startMin === null || endMin === null) return false;
+      const gap = endMin - startMin;
+      if (gap < 360) return false;
+      const startHour = Math.floor(startMin / 60);
+      const endHour = Math.floor(endMin / 60);
+      return startHour >= 22 || endHour <= 8;
+    }
+
+    function parseRawJournal(text) {
+      const lines = String(text || '').split('\n');
+      const headRe = /^\s*(\d{1,2}:\d{2})(?:\s*[-–—~～]\s*(\d{1,2}:\d{2}))?(?:\s*\[([^\]]+)\])?(?:\s+(.*))?\s*$/;
+      const entries = [];
+      let current = null;
+      let freeLines = [];
+
+      function flushCurrent() {
+        if (!current) return;
+        const textValue = current.textParts.join('\n').trim();
+        const startNorm = normalizeTime(current.start);
+        const endNorm = normalizeTime(current.end);
+        entries.push({
+          source: 'raw',
+          timeStart: startNorm,
+          timeEnd: endNorm,
+          timeLabel: startNorm ? (endNorm ? `${startNorm}–${endNorm}` : startNorm) : null,
+          tag: current.tag ? String(current.tag).trim() : null,
+          text: textValue || '(未填写内容)',
+          supplement: false
+        });
+        current = null;
       }
-      return false;
+
+      function flushFreeLines() {
+        const value = freeLines.join('\n').trim();
+        if (!value) {
+          freeLines = [];
+          return;
+        }
+        entries.push({
+          source: 'raw',
+          timeStart: null,
+          timeEnd: null,
+          timeLabel: null,
+          tag: null,
+          text: value,
+          supplement: false
+        });
+        freeLines = [];
+      }
+
+      lines.forEach((line) => {
+        const trimmed = line.trim();
+        const matched = line.match(headRe);
+        if (matched) {
+          flushCurrent();
+          flushFreeLines();
+          current = {
+            start: matched[1],
+            end: matched[2] || null,
+            tag: matched[3] || null,
+            textParts: []
+          };
+          if (matched[4]) {
+            current.textParts.push(matched[4].trim());
+          }
+          return;
+        }
+
+        if (!trimmed) {
+          if (current) current.textParts.push('');
+          return;
+        }
+
+        if (current) {
+          current.textParts.push(line.trim());
+        } else {
+          freeLines.push(line);
+        }
+      });
+
+      flushCurrent();
+      flushFreeLines();
+
+      if (!entries.length && String(text || '').trim()) {
+        entries.push({
+          source: 'raw',
+          timeStart: null,
+          timeEnd: null,
+          timeLabel: null,
+          tag: null,
+          text: String(text).trim(),
+          supplement: false
+        });
+      }
+
+      return entries.map((entry, idx) => ({ ...entry, id: `raw_${idx}` }));
     }
 
-    function analyzeEntries(entries) {
+    function quickEntryToTimeline(items) {
+      if (!Array.isArray(items)) return [];
+      const result = [];
+      items.forEach((item, idx) => {
+        const time = normalizeTime(item.time);
+        const text = String(item.text || '').trim();
+        const tag = String(item.tag || '').trim() || null;
+        if (!time && !text && !tag) return;
+        result.push({
+          id: `quick_${idx}`,
+          source: 'quick',
+          timeStart: time,
+          timeEnd: null,
+          timeLabel: time,
+          tag,
+          text: text || '(仅补充标签/时间)',
+          supplement: false
+        });
+      });
+      return result;
+    }
+
+    function buildBaseEntries(rawEntries, quickEntries) {
+      const merged = [...rawEntries, ...quickEntries].map((entry, idx) => ({
+        ...entry,
+        _order: idx
+      }));
+      return merged;
+    }
+
+    function analyze(entries) {
       const questions = [];
 
-      for (let i = 0; i < entries.length; i++) {
-        const cur = entries[i];
+      entries.forEach((entry, idx) => {
+        const text = entry.text || '';
+        const hasTime = Boolean(entry.timeStart);
+        const hasTag = Boolean(entry.tag);
 
-        // 1. 时间空白（与下一条的间隔）
-        if (i < entries.length - 1) {
-          const next = entries[i + 1];
-          const [h1, m1] = cur.time.split(':').map(Number);
-          const [h2, m2] = next.time.split(':').map(Number);
-          const gapMin = (h2 * 60 + m2) - (h1 * 60 + m1);
-
-          if (gapMin > 60 && !isSleepGap(h1, h2)) {
-            const gapH = Math.round(gapMin / 60 * 10) / 10;
-            questions.push({
-              type: 'blank',
-              id: `blank_${i}`,
-              label: `【时段空白】`,
-              text: `${cur.time}–${next.time}（约 ${gapH} 小时空白）这段时间在做什么？`,
-              afterIndex: i,
-              options: ['休息 / 午睡', '吃饭', '通勤 / 出行', '刷手机 / 娱乐', '其他（请填写）'],
-              allowCustom: true
-            });
-          }
-        }
-
-        // 2. 模糊记录
-        const isVague = VAGUE_PATTERNS.some(p => p.test(cur.text));
-        if (isVague) {
+        if (!hasTime) {
           questions.push({
-            type: 'vague',
-            id: `vague_${i}`,
-            label: `【信息模糊】`,
-            text: `${cur.time} "${cur.text}" — 具体是什么？`,
-            entryIndex: i,
-            options: null,
-            allowCustom: true
+            id: `q_missing_time_${idx}`,
+            type: 'missing_time',
+            priority: 100,
+            targetIndex: idx,
+            label: '时间缺失',
+            prompt: `这条记录建议补一个大概时间（可填 10:30 或 10:30-11:10）：\n“${text.slice(0, 34)}${text.length > 34 ? '…' : ''}”`,
+            placeholder: '例如：21:40 或 21:40-22:10'
           });
         }
 
-        // 3. 深度工作
-        const isDeep = DEEP_PATTERNS.some(p => p.test(cur.text));
-        if (isDeep) {
+        if (!hasTag && text.length > 0) {
           questions.push({
-            type: 'deep',
-            id: `deep_${i}`,
-            label: `【深度工作】`,
-            text: `${cur.time} "${cur.text}" — 具体产出是什么？遇到什么问题？`,
-            entryIndex: i,
-            options: null,
-            allowCustom: true
+            id: `q_missing_tag_${idx}`,
+            type: 'missing_tag',
+            priority: 35,
+            targetIndex: idx,
+            label: '标签可补充（选填）',
+            prompt: `这条可补一个标签（例如：工作/关系/睡眠/生活），不填也可以：\n“${text.slice(0, 34)}${text.length > 34 ? '…' : ''}”`,
+            placeholder: '例如：工作'
+          });
+        }
+
+        if (text.length < 8) {
+          questions.push({
+            id: `q_short_${idx}`,
+            type: 'short_detail',
+            priority: 70,
+            targetIndex: idx,
+            label: '内容过短',
+            prompt: `这条信息比较短，是否补一句具体内容？\n“${text || '(空)'}”`,
+            placeholder: '补一句即可'
+          });
+        } else if (VAGUE_PATTERNS.some(p => p.test(text))) {
+          questions.push({
+            id: `q_vague_${idx}`,
+            type: 'vague_detail',
+            priority: 78,
+            targetIndex: idx,
+            label: '内容模糊',
+            prompt: `这条记录有点泛，是否补充“具体做了什么”？\n“${text.slice(0, 34)}${text.length > 34 ? '…' : ''}”`,
+            placeholder: '例如：修复了 XX 问题，确认了 YY 方案'
+          });
+        }
+
+        if (DEEP_PATTERNS.some(p => p.test(text))) {
+          questions.push({
+            id: `q_deep_${idx}`,
+            type: 'deep_output',
+            priority: 60,
+            targetIndex: idx,
+            label: '产出可补充',
+            prompt: `这条像是关键工作，是否补“产出/结论”？\n“${text.slice(0, 34)}${text.length > 34 ? '…' : ''}”`,
+            placeholder: '例如：产出 xxx，卡在 yyy，下一步 zzz'
+          });
+        }
+      });
+
+      const timed = entries
+        .map((entry, idx) => {
+          const startMin = toMin(entry.timeStart);
+          const endMin = toMin(entry.timeEnd || entry.timeStart);
+          if (startMin === null || endMin === null) return null;
+          return { idx, startMin, endMin, timeStart: entry.timeStart, timeEnd: entry.timeEnd || entry.timeStart };
+        })
+        .filter(Boolean)
+        .sort((a, b) => a.startMin - b.startMin);
+
+      for (let i = 0; i < timed.length - 1; i++) {
+        const cur = timed[i];
+        const next = timed[i + 1];
+        const gap = next.startMin - cur.endMin;
+        if (gap >= 90 && !isSleepGap(cur.endMin, next.startMin)) {
+          const gapStart = cur.timeEnd;
+          const gapEnd = next.timeStart;
+          questions.push({
+            id: `q_gap_${cur.idx}_${next.idx}`,
+            type: 'gap_fill',
+            priority: 90,
+            afterIndex: cur.idx,
+            label: '时间段空白',
+            gapStart,
+            gapEnd,
+            prompt: `${gapStart}–${gapEnd} 这段时间大概在做什么？`,
+            placeholder: '例如：通勤、吃饭、休息、继续处理某任务'
           });
         }
       }
 
-      return questions;
+      const seenKey = new Set();
+      const deduped = questions.filter((q) => {
+        const key = `${q.type}-${q.targetIndex ?? ''}-${q.afterIndex ?? ''}-${q.gapStart ?? ''}-${q.gapEnd ?? ''}`;
+        if (seenKey.has(key)) return false;
+        seenKey.add(key);
+        return true;
+      });
+
+      return deduped
+        .sort((a, b) => b.priority - a.priority)
+        .slice(0, 8)
+        .map(({ priority, ...rest }) => rest);
     }
 
-    const questions = analyzeEntries(entries);
+    function renderPreview(entries) {
+      const el = document.getElementById('timelinePreview');
+      if (!entries.length) {
+        el.innerHTML = '<div class="hint">还没有可展示的条目。</div>';
+        return;
+      }
 
-    // ── 渲染追问卡片 ──────────────────────────────────────────
-    const answers = {}; // id -> { selected, custom, skipped }
+      el.innerHTML = entries.map((entry) => {
+        const time = entry.timeLabel || '未标注';
+        const tag = entry.tag ? `<span class="tag">${escapeHtml(entry.tag)}</span>` : '';
+        const text = escapeHtml(entry.text || '');
+        const supplementClass = entry.supplement ? 'supplement' : '';
+        return `
+          <div class="timeline-item">
+            <div class="timeline-time">${escapeHtml(time)}</div>
+            <div class="timeline-content ${supplementClass}">${tag}${text.replace(/\n/g, '<br>')}</div>
+          </div>
+        `;
+      }).join('');
+    }
 
     function renderQuestions(questions) {
       const area = document.getElementById('questionsArea');
-
-      if (questions.length === 0) {
-        area.innerHTML = `
-          <div class="no-questions">
-            <p>✨ 时间线已很完整，无需补充</p>
-          </div>`;
+      if (!questions.length) {
+        area.innerHTML = '<div class="no-questions">✨ 这份记录已经很清楚，可以直接保存。</div>';
         return;
       }
 
       area.innerHTML = questions.map((q, idx) => `
         <div class="question-card ${q.type}" id="card_${q.id}">
-          <div class="q-label">${q.label} · 问题 ${idx + 1}</div>
-          <div class="q-text">${q.text}</div>
-          ${q.options ? `
-            <div class="options" id="opts_${q.id}">
-              ${q.options.map((opt, oi) => `
-                <button class="option-btn" data-qid="${q.id}" data-oi="${oi}" onclick="selectOption('${q.id}', ${oi}, this)">
-                  ${String.fromCharCode(65 + oi)}. ${opt}
-                </button>
-              `).join('')}
-            </div>
-          ` : ''}
-          <input class="custom-input" id="custom_${q.id}"
-            placeholder="${q.options ? '或自定义填写…' : '请描述…'}"
-            oninput="onCustomInput('${q.id}', this.value)">
-          <span class="skip-link" onclick="skipQuestion('${q.id}')">跳过此问题</span>
+          <div class="q-label">问题 ${idx + 1} · ${q.label}</div>
+          <div class="q-text">${escapeHtml(q.prompt).replace(/\n/g, '<br>')}</div>
+          <input class="q-input" id="input_${q.id}" placeholder="${escapeHtml(q.placeholder)}" oninput="onAnswer('${q.id}', this.value)">
+          <div class="q-actions">
+            <span class="skip-link" onclick="toggleSkip('${q.id}')">跳过此问题</span>
+            <span class="skip-state" id="state_${q.id}"></span>
+          </div>
         </div>
       `).join('');
-
-      // 初始化 answers
-      questions.forEach(q => { answers[q.id] = { selected: null, custom: '', skipped: false }; });
     }
 
-    renderQuestions(questions);
-
-    function selectOption(qid, oi, btn) {
-      // 取消同组其他选中
-      document.querySelectorAll(`[data-qid="${qid}"]`).forEach(b => b.classList.remove('selected'));
-      btn.classList.add('selected');
-      answers[qid].selected = oi;
-      answers[qid].skipped = false;
-    }
-
-    function onCustomInput(qid, val) {
-      answers[qid].custom = val;
-      // 有自定义输入时取消选项选中
-      if (val.trim()) {
-        document.querySelectorAll(`[data-qid="${qid}"]`).forEach(b => b.classList.remove('selected'));
-        answers[qid].selected = null;
+    function onAnswer(id, value) {
+      answers[id] = value;
+      if (value && value.trim()) {
+        skipped[id] = false;
+        const state = document.getElementById(`state_${id}`);
+        if (state) state.textContent = '';
       }
-      answers[qid].skipped = false;
     }
 
-    function skipQuestion(qid) {
-      answers[qid].skipped = true;
-      const card = document.getElementById(`card_${qid}`);
-      card.classList.add('skipped');
+    function toggleSkip(id) {
+      skipped[id] = !skipped[id];
+      const state = document.getElementById(`state_${id}`);
+      const input = document.getElementById(`input_${id}`);
+      if (skipped[id]) {
+        if (state) state.textContent = '已跳过';
+        if (input) input.style.opacity = '0.5';
+      } else {
+        if (state) state.textContent = '';
+        if (input) input.style.opacity = '1';
+      }
     }
 
-    // ── 合并补充到时间线 ──────────────────────────────────────
-    function buildFinalTimeline(entries, questions, answers) {
-      // 深拷贝原始条目
-      const result = entries.map(e => ({ ...e, supplement: false }));
+    function stripTagBrackets(value) {
+      return String(value || '').trim().replace(/^\[|\]$/g, '').trim();
+    }
 
-      questions.forEach(q => {
-        const ans = answers[q.id];
-        if (!ans || ans.skipped) return;
+    function getAnswer(qid) {
+      if (skipped[qid]) return '';
+      return String(answers[qid] || '').trim();
+    }
 
-        // 确定补充文字
-        let text = '';
-        if (ans.custom && ans.custom.trim()) {
-          text = ans.custom.trim();
-        } else if (ans.selected !== null && q.options) {
-          const opt = q.options[ans.selected];
-          if (opt === '其他（请填写）') return; // 没填自定义就跳过
-          text = opt;
-        } else {
+    function buildFinalEntries(baseEntries, questions) {
+      const main = baseEntries.map((entry, idx) => ({ ...entry, _order: idx * 10 }));
+      const supplements = [];
+
+      questions.forEach((q, qIndex) => {
+        const ans = getAnswer(q.id);
+        if (!ans) return;
+
+        if (q.type === 'missing_time') {
+          const parsed = parseTimeExpr(ans);
+          if (parsed) {
+            const target = main[q.targetIndex];
+            if (target) {
+              target.timeStart = parsed.start;
+              target.timeEnd = parsed.end;
+              target.timeLabel = parsed.label;
+            }
+          } else {
+            const target = main[q.targetIndex];
+            if (target) {
+              supplements.push({
+                id: `supp_note_${qIndex}`,
+                source: 'supplement',
+                timeStart: target.timeStart,
+                timeEnd: target.timeEnd,
+                timeLabel: target.timeLabel,
+                tag: target.tag,
+                text: `时间说明：${ans}`,
+                supplement: true,
+                _order: target._order + 1
+              });
+            }
+          }
           return;
         }
 
-        if (q.type === 'blank') {
-          // 在 afterIndex 之后插入补充条目
-          const cur = entries[q.afterIndex];
-          const next = entries[q.afterIndex + 1];
-          result.push({
-            time: cur.time + '–' + next.time,
-            text,
-            supplement: true
-          });
-        } else if (q.type === 'vague' || q.type === 'deep') {
-          // 在对应条目旁追加补充说明
-          result.push({
-            time: entries[q.entryIndex].time,
-            text: `[关于"${entries[q.entryIndex].text}"] ${text}`,
-            supplement: true
-          });
+        if (q.type === 'missing_tag') {
+          const target = main[q.targetIndex];
+          if (target) target.tag = stripTagBrackets(ans);
+          return;
         }
+
+        if (q.type === 'gap_fill') {
+          const anchor = main[q.afterIndex] || { _order: qIndex * 10 };
+          supplements.push({
+            id: `supp_gap_${qIndex}`,
+            source: 'supplement',
+            timeStart: q.gapStart,
+            timeEnd: q.gapEnd,
+            timeLabel: `${q.gapStart}–${q.gapEnd}`,
+            tag: null,
+            text: ans,
+            supplement: true,
+            _order: anchor._order + 2
+          });
+          return;
+        }
+
+        const target = main[q.targetIndex];
+        if (!target) return;
+        supplements.push({
+          id: `supp_detail_${qIndex}`,
+          source: 'supplement',
+          timeStart: target.timeStart,
+          timeEnd: target.timeEnd,
+          timeLabel: target.timeLabel,
+          tag: target.tag,
+          text: `[关于「${target.text.slice(0, 20)}${target.text.length > 20 ? '…' : ''}」] ${ans}`,
+          supplement: true,
+          _order: target._order + 1
+        });
       });
 
-      // 按时间排序（补充条目跟在原条目后）
-      result.sort((a, b) => {
-        const ta = a.time.split('–')[0];
-        const tb = b.time.split('–')[0];
-        if (ta === tb) return a.supplement ? 1 : -1;
-        return ta.localeCompare(tb);
+      const merged = [...main, ...supplements];
+      merged.sort((a, b) => {
+        const aMin = toMin(a.timeStart);
+        const bMin = toMin(b.timeStart);
+        if (aMin === null && bMin === null) return a._order - b._order;
+        if (aMin === null) return 1;
+        if (bMin === null) return -1;
+        if (aMin !== bMin) return aMin - bMin;
+        return a._order - b._order;
       });
-
-      return result;
+      return merged;
     }
 
-    // ── 提交 ─────────────────────────────────────────────────
-    async function doSubmit() {
-      document.getElementById('submitBtn').disabled = true;
-      document.getElementById('errorMsg').style.display = 'none';
+    function exportTimeline(entries) {
+      return entries.map(entry => ({
+        time: entry.timeLabel || '未标注',
+        text: entry.text,
+        tag: entry.tag || null,
+        supplement: Boolean(entry.supplement)
+      }));
+    }
 
-      const finalTimeline = buildFinalTimeline(entries, questions, answers);
+    function buildParsedPayload(baseEntries, questions) {
+      return {
+        parserVersion: 'freeform-v1',
+        entries: baseEntries.map(entry => ({
+          source: entry.source,
+          timeStart: entry.timeStart,
+          timeEnd: entry.timeEnd,
+          tag: entry.tag,
+          text: entry.text
+        })),
+        questions: questions.map(q => ({
+          id: q.id,
+          type: q.type,
+          label: q.label,
+          prompt: q.prompt,
+          targetIndex: q.targetIndex ?? null,
+          afterIndex: q.afterIndex ?? null,
+          gapStart: q.gapStart ?? null,
+          gapEnd: q.gapEnd ?? null
+        })),
+        answers: questions.map(q => ({
+          id: q.id,
+          skipped: Boolean(skipped[q.id]),
+          answer: getAnswer(q.id)
+        }))
+      };
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    const rawEntries = parseRawJournal(rawText);
+    const quickEntries = quickEntryToTimeline(quickTimeline);
+    const baseEntries = buildBaseEntries(rawEntries, quickEntries);
+    const questions = analyze(baseEntries);
+
+    renderPreview(baseEntries);
+    renderQuestions(questions);
+
+    async function doSubmit() {
+      const submitBtn = document.getElementById('submitBtn');
+      const errorEl = document.getElementById('errorMsg');
+      submitBtn.disabled = true;
+      errorEl.style.display = 'none';
+      errorEl.textContent = '';
+
+      const finalEntries = buildFinalEntries(baseEntries, questions);
+      const finalTimeline = exportTimeline(finalEntries);
+      const parsedPayload = buildParsedPayload(baseEntries, questions);
 
       const payload = {
         date,
+        raw: {
+          text: rawText,
+          quickTimeline: Array.isArray(quickTimeline) ? quickTimeline : []
+        },
+        parsed: parsedPayload,
         timeline: finalTimeline,
         mood,
         insight,
@@ -379,20 +775,22 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
-        if (!res.ok) throw new Error('server error');
+
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.error || 'server error');
+        }
 
         sessionStorage.removeItem('diary-draft');
+        renderPreview(finalEntries);
 
-        // 更新预览为最终时间线
-        renderPreview(finalTimeline);
-
-        document.getElementById('submitBtn').style.display = 'none';
-        document.getElementById('successDate').textContent = `${date} 的记录已完整保存`;
+        submitBtn.style.display = 'none';
+        document.getElementById('successDate').textContent = `${date} 的记录已保存（含原始文本与解析结果）`;
         document.getElementById('successView').style.display = 'block';
       } catch (e) {
-        document.getElementById('errorText').textContent = '提交失败，请检查服务器是否运行后重试';
-        document.getElementById('errorMsg').style.display = 'block';
-        document.getElementById('submitBtn').disabled = false;
+        errorEl.textContent = `提交失败：${e.message}`;
+        errorEl.style.display = 'block';
+        submitBtn.disabled = false;
       }
     }
 

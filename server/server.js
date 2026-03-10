@@ -15,13 +15,10 @@ const CONFIG = {
   publicPath: path.resolve(ROOT_DIR, process.env.PUBLIC_DIR || './web')
 };
 
-// 确保数据目录存在
 function ensureDir(dir) {
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 }
 ensureDir(CONFIG.dataPath);
-
-// ── 通用工具 ─────────────────────────────────────────────────
 
 function readBody(req, maxBytes = MAX_BODY_BYTES) {
   return new Promise((resolve, reject) => {
@@ -89,78 +86,196 @@ function resolvePublicFile(publicRoot, requestPath) {
   return absolutePath;
 }
 
-// ── 分析逻辑（对应 diary-builder 六类）─────────────────────
+function readJSONIfExists(filePath) {
+  if (!fs.existsSync(filePath)) return null;
+  try {
+    return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+  } catch {
+    return null;
+  }
+}
+
+function isValidDate(date) {
+  return /^\d{4}-\d{2}-\d{2}$/.test(String(date || ''));
+}
+
+function sanitizeTimeline(timeline) {
+  if (!Array.isArray(timeline)) return [];
+  return timeline
+    .map((item) => ({
+      time: String(item.time || '').trim() || '未标注',
+      text: String(item.text || '').trim(),
+      tag: item.tag ? String(item.tag).trim() : null,
+      supplement: Boolean(item.supplement)
+    }))
+    .filter(item => item.text.length > 0);
+}
+
+function getDiaryPaths(date) {
+  const diaryRoot = path.join(CONFIG.dataPath, 'diary');
+  ensureDir(diaryRoot);
+
+  const [year, month] = date.split('-');
+  const dateDir = path.join(diaryRoot, year, month);
+  ensureDir(dateDir);
+
+  const prefix = path.join(dateDir, date);
+  return {
+    diaryRoot,
+    dateDir,
+    sourcePath: `${prefix}_source.txt`,
+    parsedPath: `${prefix}_parsed.json`,
+    timelinePath: `${prefix}_timeline.json`,
+    recordPath: `${prefix}_record.json`,
+    legacyPath: path.join(diaryRoot, `${date}.json`)
+  };
+}
+
+function loadRecordByDate(date) {
+  const paths = getDiaryPaths(date);
+  const record = readJSONIfExists(paths.recordPath);
+  if (record) return { record, paths };
+
+  const legacy = readJSONIfExists(paths.legacyPath);
+  if (legacy) return { record: legacy, paths };
+
+  return { record: null, paths };
+}
+
+function listAllDates() {
+  const diaryRoot = path.join(CONFIG.dataPath, 'diary');
+  ensureDir(diaryRoot);
+
+  const dates = new Set();
+
+  const rootFiles = fs.readdirSync(diaryRoot, { withFileTypes: true });
+  rootFiles.forEach((entry) => {
+    if (entry.isFile() && /^\d{4}-\d{2}-\d{2}\.json$/.test(entry.name)) {
+      dates.add(entry.name.replace('.json', ''));
+    }
+  });
+
+  rootFiles.forEach((yearEntry) => {
+    if (!yearEntry.isDirectory() || !/^\d{4}$/.test(yearEntry.name)) return;
+    const yearDir = path.join(diaryRoot, yearEntry.name);
+    const monthEntries = fs.readdirSync(yearDir, { withFileTypes: true });
+
+    monthEntries.forEach((monthEntry) => {
+      if (!monthEntry.isDirectory() || !/^\d{2}$/.test(monthEntry.name)) return;
+      const monthDir = path.join(yearDir, monthEntry.name);
+      const files = fs.readdirSync(monthDir, { withFileTypes: true });
+
+      files.forEach((fileEntry) => {
+        if (!fileEntry.isFile()) return;
+        const m = fileEntry.name.match(/^(\d{4}-\d{2}-\d{2})_(?:record|timeline|parsed|source)\.(?:json|txt)$/);
+        if (m) dates.add(m[1]);
+      });
+    });
+  });
+
+  return [...dates].sort().reverse();
+}
 
 const CATEGORIES = [
-  { key: 'work',   label: '核心工作', patterns: [/工作/, /开发/, /写代码/, /编程/, /会议/, /开会/, /项目/, /任务/, /debug/, /调试/] },
-  { key: 'learn',  label: '个人发展', patterns: [/学习/, /阅读/, /读书/, /练习/, /研究/, /复习/, /课/, /培训/] },
-  { key: 'life',   label: '生活管理', patterns: [/吃饭/, /做饭/, /购物/, /家务/, /通勤/, /出行/, /洗澡/, /洗漱/, /午休/, /起床/] },
+  { key: 'work', label: '核心工作', patterns: [/工作/, /开发/, /写代码/, /编程/, /会议/, /开会/, /项目/, /任务/, /debug/, /调试/i] },
+  { key: 'learn', label: '个人发展', patterns: [/学习/, /阅读/, /读书/, /练习/, /研究/, /复习/, /课/, /培训/] },
+  { key: 'life', label: '生活管理', patterns: [/吃饭/, /做饭/, /购物/, /家务/, /通勤/, /出行/, /洗澡/, /洗漱/, /午休/, /起床/] },
   { key: 'social', label: '社交娱乐', patterns: [/聊天/, /朋友/, /聚餐/, /娱乐/, /游戏/, /电影/, /逛/] },
-  { key: 'rest',   label: '休息',     patterns: [/睡/, /休息/, /冥想/, /午睡/, /小憩/] },
-  { key: 'drain',  label: '消耗',     patterns: [/刷手机/, /刷视频/, /发呆/, /摸鱼/, /无聊/] }
+  { key: 'rest', label: '休息', patterns: [/睡/, /休息/, /冥想/, /午睡/, /小憩/] },
+  { key: 'drain', label: '消耗', patterns: [/刷手机/, /刷视频/, /发呆/, /摸鱼/, /无聊/] }
 ];
 
 function classifyText(text) {
+  const value = String(text || '');
   for (const cat of CATEGORIES) {
-    if (cat.patterns.some(p => p.test(text))) return cat.key;
+    if (cat.patterns.some(p => p.test(value))) return cat.key;
   }
   return 'other';
 }
 
+function parseTimeStart(timeLabel) {
+  const base = String(timeLabel || '').split('–')[0].split('-')[0].trim();
+  const m = base.match(/^(\d{1,2}):(\d{2})$/);
+  if (!m) return null;
+  const h = Number(m[1]);
+  const min = Number(m[2]);
+  if (h < 0 || h > 23 || min < 0 || min > 59) return null;
+  return h * 60 + min;
+}
+
+function parseTimeEnd(timeLabel) {
+  const parts = String(timeLabel || '').split(/[–-]/);
+  if (parts.length < 2) {
+    const start = parseTimeStart(timeLabel);
+    return start;
+  }
+  const tail = parts[1].trim();
+  const m = tail.match(/^(\d{1,2}):(\d{2})$/);
+  if (!m) return parseTimeStart(timeLabel);
+  const h = Number(m[1]);
+  const min = Number(m[2]);
+  if (h < 0 || h > 23 || min < 0 || min > 59) return parseTimeStart(timeLabel);
+  return h * 60 + min;
+}
+
 function buildReport(data) {
-  const timeline = data.timeline || [];
+  const timeline = Array.isArray(data.timeline) ? data.timeline : [];
   const totals = {};
   CATEGORIES.forEach(c => { totals[c.key] = 0; });
 
-  for (let i = 0; i < timeline.length; i++) {
-    const cur = timeline[i];
-    const baseTime = cur.time.split('–')[0];
-    const [h1, m1] = baseTime.split(':').map(Number);
-    if (isNaN(h1)) continue;
+  const rows = timeline.map((item, idx) => ({
+    ...item,
+    idx,
+    startMin: parseTimeStart(item.time),
+    endMin: parseTimeEnd(item.time)
+  }));
+
+  rows.forEach((cur, i) => {
+    if (cur.startMin === null) return;
 
     let durationMin = 0;
-    if (cur.time.includes('–')) {
-      const end = cur.time.split('–')[1];
-      const [h2, m2] = end.split(':').map(Number);
-      durationMin = (h2 * 60 + m2) - (h1 * 60 + m1);
-    } else if (i < timeline.length - 1) {
-      const next = timeline[i + 1];
-      const nextBase = next.time.split('–')[0];
-      const [h2, m2] = nextBase.split(':').map(Number);
-      if (!isNaN(h2)) durationMin = (h2 * 60 + m2) - (h1 * 60 + m1);
+    if (/[–-]/.test(String(cur.time || '')) && cur.endMin !== null && cur.endMin > cur.startMin) {
+      durationMin = cur.endMin - cur.startMin;
+    } else if (i < rows.length - 1 && rows[i + 1].startMin !== null) {
+      const nextStart = rows[i + 1].startMin;
+      if (nextStart > cur.startMin) durationMin = nextStart - cur.startMin;
     }
 
     if (durationMin > 0) {
       const key = classifyText(cur.text);
       totals[key] = (totals[key] || 0) + durationMin;
     }
-  }
+  });
 
-  return { ...data, categoryTotals: totals };
+  return {
+    ...data,
+    categoryTotals: totals
+  };
 }
-
-// ── HTTP 路由 ─────────────────────────────────────────────────
 
 const MIME = {
   '.html': 'text/html',
-  '.js':   'application/javascript',
-  '.css':  'text/css',
+  '.js': 'application/javascript',
+  '.css': 'text/css',
   '.json': 'application/json',
-  '.ico':  'image/x-icon',
-  '.svg':  'image/svg+xml'
+  '.ico': 'image/x-icon',
+  '.svg': 'image/svg+xml',
+  '.txt': 'text/plain'
 };
 
 const server = http.createServer(async (req, res) => {
   const urlObj = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   const pathname = urlObj.pathname;
 
-  // CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  if (req.method === 'OPTIONS') { res.writeHead(200); res.end(); return; }
+  if (req.method === 'OPTIONS') {
+    res.writeHead(200);
+    res.end();
+    return;
+  }
 
-  // 健康检查
   if (req.method === 'GET' && pathname === '/health') {
     sendJSON(res, 200, {
       status: 'ok',
@@ -172,27 +287,86 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // POST /api/submit — 接收完整日记（含补充）
   if (req.method === 'POST' && pathname === '/api/submit') {
     if (!requireApiAuth(req, res, urlObj)) return;
+
     try {
-      const data = await readBody(req);
-      if (!data.date) throw new Error('missing date');
+      const body = await readBody(req);
+      if (!isValidDate(body.date)) throw new Error('invalid date (expected YYYY-MM-DD)');
 
-      const dir = path.join(CONFIG.dataPath, 'diary');
-      ensureDir(dir);
-      const filePath = path.join(dir, `${data.date}.json`);
+      const nowISO = new Date().toISOString();
+      const paths = getDiaryPaths(body.date);
+      const incomingRawText = String(body.raw?.text || '').trim();
+      const incomingTimeline = sanitizeTimeline(body.timeline);
+      const incomingParsed = body.parsed && typeof body.parsed === 'object' ? body.parsed : null;
 
-      // 追加写入：若当天已有记录则合并时间线
-      let existing = {};
-      if (fs.existsSync(filePath)) {
-        existing = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+      if (!incomingRawText && incomingTimeline.length === 0) {
+        throw new Error('empty payload: raw.text and timeline are both empty');
       }
-      const merged = { ...existing, ...data };
-      fs.writeFileSync(filePath, JSON.stringify(merged, null, 2));
 
-      console.log(`📝 [${data.date}] 日记已保存 (${(data.timeline || []).length} 条)`);
-      sendJSON(res, 200, { success: true });
+      const existing = readJSONIfExists(paths.recordPath) || readJSONIfExists(paths.legacyPath) || {};
+
+      const record = {
+        date: body.date,
+        mood: body.mood ?? existing.mood ?? null,
+        insight: body.insight ?? existing.insight ?? '',
+        tomorrow: body.tomorrow ?? existing.tomorrow ?? '',
+        timeline: incomingTimeline.length > 0 ? incomingTimeline : sanitizeTimeline(existing.timeline),
+        createdAt: existing.createdAt || nowISO,
+        updatedAt: nowISO,
+        files: {
+          source: paths.sourcePath,
+          parsed: paths.parsedPath,
+          timeline: paths.timelinePath,
+          record: paths.recordPath
+        }
+      };
+
+      if (incomingRawText) {
+        fs.writeFileSync(paths.sourcePath, `${incomingRawText}\n`);
+      } else if (!fs.existsSync(paths.sourcePath) && typeof existing.rawText === 'string' && existing.rawText.trim()) {
+        fs.writeFileSync(paths.sourcePath, `${existing.rawText.trim()}\n`);
+      }
+
+      const parsedPayload = incomingParsed || readJSONIfExists(paths.parsedPath) || {};
+      fs.writeFileSync(
+        paths.parsedPath,
+        JSON.stringify(
+          {
+            ...parsedPayload,
+            date: body.date,
+            savedAt: nowISO
+          },
+          null,
+          2
+        )
+      );
+
+      fs.writeFileSync(paths.timelinePath, JSON.stringify(record.timeline, null, 2));
+      fs.writeFileSync(paths.recordPath, JSON.stringify(record, null, 2));
+
+      const legacyRecord = {
+        date: record.date,
+        timeline: record.timeline,
+        mood: record.mood,
+        insight: record.insight,
+        tomorrow: record.tomorrow,
+        createdAt: record.createdAt,
+        updatedAt: record.updatedAt
+      };
+      fs.writeFileSync(paths.legacyPath, JSON.stringify(legacyRecord, null, 2));
+
+      console.log(`📝 [${body.date}] saved raw/parsed/timeline (${record.timeline.length} timeline items)`);
+      sendJSON(res, 200, {
+        success: true,
+        date: body.date,
+        files: {
+          source: paths.sourcePath,
+          parsed: paths.parsedPath,
+          timeline: paths.timelinePath,
+          record: paths.recordPath
+        }
+      });
     } catch (e) {
       console.error('submit error:', e.message);
       if (e.code === 'PAYLOAD_TOO_LARGE') {
@@ -204,19 +378,31 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // GET /api/report/:date — 返回指定日期的分析数据
   const reportMatch = pathname.match(/^\/api\/report\/(\d{4}-\d{2}-\d{2})$/);
   if (req.method === 'GET' && reportMatch) {
     if (!requireApiAuth(req, res, urlObj)) return;
+
     const date = reportMatch[1];
-    const filePath = path.join(CONFIG.dataPath, 'diary', `${date}.json`);
-    if (!fs.existsSync(filePath)) {
+    const { record, paths } = loadRecordByDate(date);
+    if (!record) {
       sendJSON(res, 404, { error: 'not found' });
       return;
     }
+
     try {
-      const raw = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-      const report = buildReport(raw);
+      const report = buildReport({
+        date,
+        timeline: sanitizeTimeline(record.timeline),
+        mood: record.mood ?? null,
+        insight: record.insight || '',
+        tomorrow: record.tomorrow || ''
+      });
+      report.storage = {
+        recordPath: paths.recordPath,
+        timelinePath: paths.timelinePath,
+        sourcePath: paths.sourcePath,
+        parsedPath: paths.parsedPath
+      };
       sendJSON(res, 200, report);
     } catch (e) {
       sendJSON(res, 500, { error: e.message });
@@ -224,25 +410,16 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // GET /api/dates — 列出所有有记录的日期
   if (req.method === 'GET' && pathname === '/api/dates') {
     if (!requireApiAuth(req, res, urlObj)) return;
     try {
-      const dir = path.join(CONFIG.dataPath, 'diary');
-      ensureDir(dir);
-      const files = fs.readdirSync(dir)
-        .filter(f => f.endsWith('.json'))
-        .map(f => f.replace('.json', ''))
-        .sort()
-        .reverse();
-      sendJSON(res, 200, { dates: files });
+      sendJSON(res, 200, { dates: listAllDates() });
     } catch (e) {
       sendJSON(res, 500, { error: e.message });
     }
     return;
   }
 
-  // 静态文件
   let urlPath = pathname;
   if (urlPath === '/') urlPath = '/index.html';
   const fullPath = resolvePublicFile(CONFIG.publicPath, urlPath);
@@ -251,10 +428,14 @@ const server = http.createServer(async (req, res) => {
     res.end('Forbidden');
     return;
   }
-  const ext = path.extname(fullPath);
 
+  const ext = path.extname(fullPath);
   fs.readFile(fullPath, (err, content) => {
-    if (err) { res.writeHead(404); res.end('Not Found'); return; }
+    if (err) {
+      res.writeHead(404);
+      res.end('Not Found');
+      return;
+    }
     res.writeHead(200, { 'Content-Type': MIME[ext] || 'text/plain' });
     res.end(content);
   });
