@@ -3,7 +3,7 @@
 ## 快速启动（推荐）
 
 ```bash
-bash deploy/start.sh
+bash {install_path}/deploy/start.sh
 ```
 
 自动完成：
@@ -39,14 +39,14 @@ pkill -f "node server/server.js"
 ### 仅本地访问
 
 ```bash
-node server/server.js
+node {install_path}/server/server.js
 # 访问 http://localhost:8888
 ```
 
 ### 仅外网（需先启动 server）
 
 ```bash
-bash deploy/cloudflared.sh
+bash {install_path}/deploy/cloudflared.sh
 ```
 
 ### Docker 部署

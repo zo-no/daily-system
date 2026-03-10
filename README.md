@@ -80,8 +80,10 @@ OpenClaw Plugin，命名空间 `daily`，5 个 Skill：
 晚间 [nightly_time]
     /daily:tracker → 发提醒 + 打卡链接
         ↓ 每 poll_interval 分钟轮询
-        已提交 → /daily:builder 整理时间线
-                     ↓
+        已提交 → 检查是否含 supplement:true 条目
+                  有 → 跳过 /daily:builder
+                  无 → /daily:builder 整理时间线
+                           ↓
                  /daily:reflect 生成复盘
                      ↓
                  发复盘摘要给用户
@@ -282,7 +284,7 @@ daily-system 安装路径：{install_path}
 | 端口 8888 被占用 | 修改 `server/server.js` 中 `CONFIG.port` |
 | 网页无法访问 | `ps aux \| grep "node server"` |
 | 外网链接不出现 | 等待 15 秒，查看 `cat /tmp/diary-server.log` |
-| 数据未保存 | 检查 `data/diary/` 目录是否存在 |
+| 数据未保存 | 检查 `{install_path}/data/diary/` 目录是否存在 |
 
 ---
 
@@ -293,4 +295,4 @@ daily-system 安装路径：{install_path}
 - [ ] `{workspace}/diary/人生目标.md` 已生成并用户确认
 - [ ] `{workspace}/HEARTBEAT.md` 已写入两个定时任务
 - [ ] `{workspace}/MEMORY.md` 记录了安装路径和数据路径
-- [ ] 提交打卡后 `data/diary/` 下生成 JSON 文件
+- [ ] 提交打卡后 `{install_path}/data/diary/` 下生成 JSON 文件
