@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>每日打卡</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { 
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 500px; margin: 0 auto; padding: 20px;
+      background: #0d1117; color: #c9d1d9;
+    }
+    h1 { text-align: center; margin-bottom: 30px; font-size: 24px; }
+    .date { text-align: center; color: #8b949e; margin-bottom: 30px; }
+    
+    .question { margin-bottom: 25px; }
+    .question-label { font-size: 16px; margin-bottom: 10px; color: #58a6ff; }
+    
+    .checkbox-group { display: flex; flex-wrap: wrap; gap: 8px; }
+    .checkbox-item {
+      background: #21262d; border: 1px solid #30363d;
+      padding: 8px 16px; border-radius: 20px; cursor: pointer;
+      transition: all 0.2s;
+    }
+    .checkbox-item.selected {
+      background: #238636; border-color: #238636; color: white;
+    }
+    
+    .mood-group { display: flex; justify-content: center; gap: 20px; }
+    .mood-btn {
+      background: #21262d; border: 2px solid #30363d;
+      width: 80px; height: 80px; border-radius: 50%;
+      cursor: pointer; font-size: 30px; transition: all 0.2s;
+    }
+    .mood-btn.selected { transform: scale(1.1); border-width: 3px; }
+    .mood-btn.high.selected { border-color: #3fb950; background: #1f3d1f; }
+    .mood-btn.medium.selected { border-color: #d29922; background: #3d2e1f; }
+    .mood-btn.low.selected { border-color: #f85149; background: #3d1f1f; }
+    
+    textarea {
+      width: 100%; background: #0d1117; border: 1px solid #30363d;
+      color: #c9d1d9; padding: 12px; border-radius: 6px; font-size: 16px;
+      min-height: 80px; resize: vertical;
+    }
+    textarea:focus { outline: none; border-color: #58a6ff; }
+    
+    .submit-btn {
+      width: 100%; background: #238636; color: white;
+      border: none; padding: 16px; border-radius: 8px;
+      font-size: 18px; font-weight: bold; cursor: pointer;
+      margin-top: 20px;
+    }
+    .submit-btn:hover { background: #2ea043; }
+    
+    .success { 
+      text-align: center; padding: 40px; 
+      display: none;
+    }
+    .success h2 { color: #3fb950; margin-bottom: 10px; }
+  </style>
+</head>
+<body>
+  <h1>📡 螺旋探索号每日打卡</h1>
+  <div class="date" id="date"></div>
+    
+    <div class="question">
+      <div class="question-label">选择日期</div>
+      <input type="date" id="datePicker" style="background:#21262d;border:1px solid #30363d;color:#c9d1d9;padding:10px;border-radius:6px;width:100%;font-size:16px;">
+    </div>
+  
+  <form id="diaryForm">
+    <!-- 对应: ⌚️ 间歇性记录 -->
+    <div class="question">
+      <div class="question-label">1. 今天做了什么？（时间线）</div>
+      <textarea id="timeline" placeholder="例:&#10;09:00 写代码&#10;12:00 开会&#10;14:00 学习..."></textarea>
+    </div>
+    
+    <!-- 对应: 📱 GetSeed 原始输出 - 自动统计 -->
+    <div class="question">
+      <div class="question-label">2. 今日分类（多选）</div>
+      <div class="checkbox-group">
+        <div class="checkbox-item" data-value="工作" onclick="toggle(this)">📄 工作</div>
+        <div class="checkbox-item" data-value="学习" onclick="toggle(this)">📖 学习</div>
+        <div class="checkbox-item" data-value="关系" onclick="toggle(this)">👥 关系</div>
+        <div class="checkbox-item" data-value="健康" onclick="toggle(this)">🔋 健康</div>
+        <div class="checkbox-item" data-value="休闲" onclick="toggle(this)">☕ 休闲</div>
+        <div class="checkbox-item" data-value="生活" onclick="toggle(this)">🏠 生活</div>
+      </div>
+    </div>
+    
+    <!-- 对应: 📝 今日觉察 -->
+    <div class="question">
+      <div class="question-label">3. 最有价值的1件事？</div>
+      <textarea id="best" placeholder="今天最有成就感的事..."></textarea>
+    </div>
+    
+    <div class="question">
+      <div class="question-label">4. 身体/情绪信号？</div>
+      <textarea id="signal" placeholder="疲惫？焦虑？开心？..."></textarea>
+    </div>
+    
+    <div class="question">
+      <div class="question-label">5. 与人生目标哪个角色有关？</div>
+      <input type="text" id="role" placeholder="如: 工程师 / 管理者 / 创作者...">
+    </div>
+    
+    <!-- 对应: 心情 + 明日计划 -->
+    <div class="question">
+      <div class="question-label">6. 今日心情？</div>
+      <div class="mood-group">
+        <div class="mood-btn high" onclick="selectMood(this, 'high')">🟢</div>
+        <div class="mood-btn medium" onclick="selectMood(this, 'medium')">🟡</div>
+        <div class="mood-btn low" onclick="selectMood(this, 'low')">🔴</div>
+      </div>
+    </div>
+    
+    <div class="question">
+      <div class="question-label">7. 明日最重要的一件事？</div>
+      <input type="text" id="tomorrow" placeholder="一句话...">
+    </div>
+    
+    <button type="submit" class="submit-btn">🚀 提交打卡</button>
+  </form>
+  
+  <div class="success" id="success">
+    <h2>✅ 打卡成功！</h2>
+    <p>数据已传回螺旋探索号 🚀</p>
+  </div>
+  
+  <script>
+    const today = new Date();
+    const days = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+    const dateStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+    document.getElementById('date').textContent = `${dateStr} ${days[today.getDay()]}`;
+    document.getElementById('datePicker').value = dateStr;
+    
+    let selectedItems = [];
+    let selectedMood = null;
+    
+    function toggle(el) {
+      el.classList.toggle('selected');
+      const val = el.dataset.value;
+      if (selectedItems.includes(val)) {
+        selectedItems = selectedItems.filter(v => v !== val);
+      } else {
+        selectedItems.push(val);
+      }
+    }
+    
+    function selectMood(el, mood) {
+      document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected'));
+      el.classList.add('selected');
+      selectedMood = mood;
+    }
+    
+    document.getElementById('diaryForm').onsubmit = async function(e) {
+      e.preventDefault();
+      const data = {
+        date: document.getElementById('datePicker').value || today.toISOString().split('T')[0],
+        timeline: document.getElementById('timeline').value,
+        categories: selectedItems,
+        best: document.getElementById('best').value,
+        signal: document.getElementById('signal').value,
+        role: document.getElementById('role').value,
+        mood: selectedMood,
+        tomorrow: document.getElementById('tomorrow').value
+      };
+      
+      try {
+        await fetch('/api/diary', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(data)
+        });
+      } catch(err) {
+        localStorage.setItem('diary-' + data.date, JSON.stringify(data));
+      }
+      
+      document.getElementById('diaryForm').style.display = 'none';
+      document.getElementById('success').style.display = 'block';
+    };
+  </script>
+</body>
+</html>

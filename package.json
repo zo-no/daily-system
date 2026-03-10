@@ -1,0 +1,28 @@
+{
+  "name": "daily-system",
+  "version": "1.0.0",
+  "description": "极简日记系统 - 全天分散收集 + 自动分析 + 晚间反馈",
+  "main": "server/server.js",
+  "scripts": {
+    "start": "node server/server.js",
+    "dev": "node server/server.js",
+    "test": "echo \"No tests specified\" && exit 0"
+  },
+  "keywords": [
+    "diary",
+    "journal",
+    "time-tracking",
+    "productivity",
+    "ai",
+    "openclaw"
+  ],
+  "author": "Zeno & kual",
+  "license": "MIT",
+  "dependencies": {
+  },
+  "devDependencies": {
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}
