@@ -104,31 +104,6 @@
     .next-btn:disabled { background: #21262d; color: #6e7681; cursor: not-allowed; }
 
     .warn { color: #f85149; font-size: 12px; margin-top: 6px; display: none; }
-
-    /* 粘贴模式 */
-    .paste-toggle {
-      display: flex; align-items: center; gap: 6px;
-      font-size: 12px; color: #8b949e; cursor: pointer;
-      margin-bottom: 12px; user-select: none;
-    }
-    .paste-toggle:hover { color: #58a6ff; }
-    .paste-toggle .arrow { transition: transform 0.2s; display: inline-block; }
-    .paste-toggle.open .arrow { transform: rotate(90deg); }
-
-    .paste-box { display: none; margin-bottom: 12px; }
-    .paste-box.open { display: block; }
-    .paste-box textarea {
-      min-height: 100px; font-size: 13px;
-      font-family: monospace; line-height: 1.6;
-    }
-    .parse-btn {
-      width: 100%; margin-top: 8px;
-      background: #1f3d5c; border: 1px solid #58a6ff;
-      color: #58a6ff; padding: 8px; border-radius: 6px;
-      font-size: 13px; cursor: pointer;
-    }
-    .parse-btn:hover { background: #1a4a73; }
-    .parse-hint { font-size: 11px; color: #6e7681; margin-top: 6px; }
   </style>
 </head>
 <body>
@@ -146,22 +121,6 @@
   <!-- 时间线（必填） -->
   <div class="section">
     <div class="section-title">⏰ 时间线 <span style="color:#f85149;font-size:11px;">必填</span></div>
-
-    <!-- 粘贴模式 -->
-    <div class="paste-toggle" onclick="togglePaste(this)">
-      <span class="arrow">▶</span> 粘贴流水账（自动解析）
-    </div>
-    <div class="paste-box" id="pasteBox">
-      <textarea id="pasteInput" placeholder="把带时间点的日记贴进来，例如：
-9:00 起床
-10:30 开始写代码
-12:00 吃饭
-14:00 继续开发，搞定登录模块
-22:00 刷手机"></textarea>
-      <button class="parse-btn" onclick="parsePaste()">解析 →</button>
-      <div class="parse-hint">支持 9:00 / 09:00 / 21:30 等格式，每行一条</div>
-    </div>
-
     <div class="quick-btns">
       <div class="quick-btn" onclick="quickAdd('06:30','起床')">06:30 起床</div>
       <div class="quick-btn" onclick="quickAdd('07:00','起床')">07:00 起床</div>
@@ -213,44 +172,6 @@
     addEntry();
 
     let selectedMood = null;
-
-    function togglePaste(el) {
-      el.classList.toggle('open');
-      document.getElementById('pasteBox').classList.toggle('open');
-    }
-
-    function parsePaste() {
-      const raw = document.getElementById('pasteInput').value.trim();
-      if (!raw) return;
-
-      // 匹配行首时间：9:00 / 09:00 / 9:30 / 21:05 等
-      const timeRe = /^(\d{1,2})[:\uff1a](\d{2})\s+(.+)/;
-      const parsed = [];
-
-      raw.split('\n').forEach(line => {
-        const m = line.trim().match(timeRe);
-        if (m) {
-          const hh = m[1].padStart(2, '0');
-          const mm = m[2];
-          parsed.push({ time: `${hh}:${mm}`, text: m[3].trim() });
-        }
-      });
-
-      if (parsed.length === 0) {
-        alert('没有识别到时间点，请确认格式如「9:00 起床」');
-        return;
-      }
-
-      // 清空现有条目，填入解析结果
-      document.getElementById('entries').innerHTML = '';
-      parsed.forEach(e => addEntry(e.time, e.text));
-
-      // 收起粘贴框
-      const toggle = document.querySelector('.paste-toggle');
-      toggle.classList.remove('open');
-      document.getElementById('pasteBox').classList.remove('open');
-      document.getElementById('pasteInput').value = '';
-    }
 
     function addEntry(time = '', text = '') {
       const div = document.createElement('div');
