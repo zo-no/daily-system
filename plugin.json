@@ -1,6 +1,6 @@
 {
   "name": "daily",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "极简日记系统 - 晚间记录 + 时间线整理 + 柳比歇夫复盘 + 早报待办",
   "repository": "https://github.com/zo-no/daily-system.git",
   "install": "README.md#首次安装流程",
@@ -34,6 +34,12 @@
       "path": "skills/daily-morning/SKILL.md",
       "command": "/daily:morning",
       "description": "早报层：基于昨日复盘，推荐今日待办"
+    },
+    {
+      "name": "reminder",
+      "path": "skills/daily-reminder/SKILL.md",
+      "command": "/daily:reminder",
+      "description": "行为规范层：根据复盘分析设置定时提醒（早睡、运动等），通过 say 命令自动提醒"
     }
   ],
   "heartbeat": {
