@@ -75,6 +75,24 @@ OpenClaw Plugin，命名空间 `daily`，5 个 Skill：
 
 ---
 
+## Runtime Plugin（M2）
+
+运行时工具插件位于 `extension/`，用于提供可调用 tools：
+
+- `daily_start_service`
+- `daily_status`
+- `daily_get_link`
+- `daily_stop_service`
+
+安装（开发链接模式）：
+
+```bash
+cd {install_path}
+openclaw plugins install -l ./extension
+```
+
+---
+
 ## 每日流程
 
 ```
@@ -167,10 +185,10 @@ bash {install_path}/deploy/start.sh
 ```
 
 等待约 15 秒，检查输出：
-- 出现 `http://localhost:8888` → 记录本地地址
+- 出现 `http://127.0.0.1:8888` → 记录本地地址
 - 出现 `trycloudflare.com` 链接 → 记录外网地址
 
-启动失败时查看 `cat /tmp/diary-server.log` 告知用户原因。
+启动失败时查看 `/tmp/daily-system/server.log` 告知用户原因。
 
 ### Step 4：一问一答收集用户习惯（不要一次全问）
 
@@ -287,14 +305,14 @@ daily-system 安装路径：{install_path}
 |------|----------|
 | 端口 8888 被占用 | 修改 `server/server.js` 中 `CONFIG.port` |
 | 网页无法访问 | `ps aux \| grep "node server"` |
-| 外网链接不出现 | 等待 15 秒，查看 `cat /tmp/diary-server.log` |
+| 外网链接不出现 | 等待 15 秒，查看 `/tmp/daily-system/tunnel.log` |
 | 数据未保存 | 检查 `{install_path}/data/diary/` 目录是否存在 |
 
 ---
 
 ## 验证清单
 
-- [ ] `http://localhost:8888` 可以访问
+- [ ] `http://127.0.0.1:8888` 可以访问
 - [ ] `{workspace}/config.json` 已按用户习惯填写
 - [ ] `{workspace}/diary/人生目标.md` 已生成并用户确认
 - [ ] `{workspace}/HEARTBEAT.md` 已写入两个定时任务

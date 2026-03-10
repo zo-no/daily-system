@@ -1,0 +1,37 @@
+{
+  "id": "daily-system",
+  "uiHints": {
+    "enabled": {
+      "label": "启用 Daily System Runtime"
+    },
+    "systemRoot": {
+      "label": "系统根目录",
+      "help": "包含 deploy/start.sh、deploy/stop.sh、deploy/status.sh 的目录"
+    },
+    "defaultExposeMode": {
+      "label": "默认暴露模式",
+      "help": "local=仅本地，tunnel=Cloudflare 外网"
+    }
+  },
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "enabled": {
+        "type": "boolean",
+        "default": true
+      },
+      "systemRoot": {
+        "type": "string"
+      },
+      "defaultExposeMode": {
+        "type": "string",
+        "enum": [
+          "local",
+          "tunnel"
+        ],
+        "default": "local"
+      }
+    }
+  }
+}

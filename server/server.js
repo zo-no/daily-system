@@ -2,10 +2,17 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
+const ROOT_DIR = path.resolve(__dirname, '..');
+const MAX_BODY_BYTES = parseInt(process.env.MAX_BODY_BYTES || `${1024 * 1024}`, 10);
+const API_TOKEN = process.env.API_TOKEN || '';
+const REQUIRE_API_AUTH =
+  process.env.REQUIRE_API_AUTH === '1' ||
+  (process.env.REQUIRE_API_AUTH !== '0' && API_TOKEN.length > 0);
+
 const CONFIG = {
-  port: 8888,
-  dataPath: './data',
-  publicPath: './web'
+  port: parseInt(process.env.PORT || '8888', 10),
+  dataPath: path.resolve(ROOT_DIR, process.env.DATA_DIR || './data'),
+  publicPath: path.resolve(ROOT_DIR, process.env.PUBLIC_DIR || './web')
 };
 
 // 确保数据目录存在
@@ -16,10 +23,20 @@ ensureDir(CONFIG.dataPath);
 
 // ── 通用工具 ─────────────────────────────────────────────────
 
-function readBody(req) {
+function readBody(req, maxBytes = MAX_BODY_BYTES) {
   return new Promise((resolve, reject) => {
     let body = '';
-    req.on('data', chunk => body += chunk);
+    let size = 0;
+    req.on('data', chunk => {
+      size += chunk.length;
+      if (size > maxBytes) {
+        const err = new Error(`payload too large (>${maxBytes} bytes)`);
+        err.code = 'PAYLOAD_TOO_LARGE';
+        req.destroy(err);
+        return;
+      }
+      body += chunk;
+    });
     req.on('end', () => {
       try { resolve(JSON.parse(body)); }
       catch (e) { reject(e); }
@@ -31,6 +48,45 @@ function readBody(req) {
 function sendJSON(res, status, data) {
   res.writeHead(status, { 'Content-Type': 'application/json' });
   res.end(JSON.stringify(data));
+}
+
+function getRequestToken(req, urlObj) {
+  const auth = req.headers.authorization || '';
+  if (auth.startsWith('Bearer ')) {
+    return auth.slice('Bearer '.length).trim();
+  }
+  return urlObj.searchParams.get('token') || '';
+}
+
+function requireApiAuth(req, res, urlObj) {
+  if (!REQUIRE_API_AUTH) return true;
+  if (!API_TOKEN) {
+    sendJSON(res, 500, { error: 'server misconfigured: API_TOKEN missing' });
+    return false;
+  }
+  const token = getRequestToken(req, urlObj);
+  if (token !== API_TOKEN) {
+    sendJSON(res, 401, { error: 'unauthorized' });
+    return false;
+  }
+  return true;
+}
+
+function resolvePublicFile(publicRoot, requestPath) {
+  let decodedPath = requestPath;
+  try {
+    decodedPath = decodeURIComponent(requestPath);
+  } catch {
+    return null;
+  }
+  const normalized = path.posix.normalize(decodedPath);
+  const relativePath = normalized.replace(/^\/+/, '');
+  const absolutePath = path.resolve(publicRoot, relativePath);
+  const allowedPrefix = `${publicRoot}${path.sep}`;
+  if (absolutePath !== publicRoot && !absolutePath.startsWith(allowedPrefix)) {
+    return null;
+  }
+  return absolutePath;
 }
 
 // ── 分析逻辑（对应 diary-builder 六类）─────────────────────
@@ -90,18 +146,35 @@ const MIME = {
   '.js':   'application/javascript',
   '.css':  'text/css',
   '.json': 'application/json',
-  '.ico':  'image/x-icon'
+  '.ico':  'image/x-icon',
+  '.svg':  'image/svg+xml'
 };
 
 const server = http.createServer(async (req, res) => {
+  const urlObj = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+  const pathname = urlObj.pathname;
+
   // CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') { res.writeHead(200); res.end(); return; }
 
+  // 健康检查
+  if (req.method === 'GET' && pathname === '/health') {
+    sendJSON(res, 200, {
+      status: 'ok',
+      port: CONFIG.port,
+      dataPath: CONFIG.dataPath,
+      publicPath: CONFIG.publicPath,
+      authRequired: REQUIRE_API_AUTH
+    });
+    return;
+  }
+
   // POST /api/submit — 接收完整日记（含补充）
-  if (req.method === 'POST' && req.url === '/api/submit') {
+  if (req.method === 'POST' && pathname === '/api/submit') {
+    if (!requireApiAuth(req, res, urlObj)) return;
     try {
       const data = await readBody(req);
       if (!data.date) throw new Error('missing date');
@@ -122,14 +195,19 @@ const server = http.createServer(async (req, res) => {
       sendJSON(res, 200, { success: true });
     } catch (e) {
       console.error('submit error:', e.message);
+      if (e.code === 'PAYLOAD_TOO_LARGE') {
+        sendJSON(res, 413, { error: e.message });
+        return;
+      }
       sendJSON(res, 500, { error: e.message });
     }
     return;
   }
 
   // GET /api/report/:date — 返回指定日期的分析数据
-  const reportMatch = req.url.match(/^\/api\/report\/(\d{4}-\d{2}-\d{2})$/);
+  const reportMatch = pathname.match(/^\/api\/report\/(\d{4}-\d{2}-\d{2})$/);
   if (req.method === 'GET' && reportMatch) {
+    if (!requireApiAuth(req, res, urlObj)) return;
     const date = reportMatch[1];
     const filePath = path.join(CONFIG.dataPath, 'diary', `${date}.json`);
     if (!fs.existsSync(filePath)) {
@@ -147,7 +225,8 @@ const server = http.createServer(async (req, res) => {
   }
 
   // GET /api/dates — 列出所有有记录的日期
-  if (req.method === 'GET' && req.url === '/api/dates') {
+  if (req.method === 'GET' && pathname === '/api/dates') {
+    if (!requireApiAuth(req, res, urlObj)) return;
     try {
       const dir = path.join(CONFIG.dataPath, 'diary');
       ensureDir(dir);
@@ -164,9 +243,14 @@ const server = http.createServer(async (req, res) => {
   }
 
   // 静态文件
-  let urlPath = req.url.split('?')[0];
+  let urlPath = pathname;
   if (urlPath === '/') urlPath = '/index.html';
-  const fullPath = path.join(CONFIG.publicPath, urlPath);
+  const fullPath = resolvePublicFile(CONFIG.publicPath, urlPath);
+  if (!fullPath) {
+    res.writeHead(403);
+    res.end('Forbidden');
+    return;
+  }
   const ext = path.extname(fullPath);
 
   fs.readFile(fullPath, (err, content) => {
@@ -176,8 +260,8 @@ const server = http.createServer(async (req, res) => {
   });
 });
 
-server.listen(CONFIG.port, () => {
-  console.log(`🚀 Daily System running at http://localhost:${CONFIG.port}`);
+server.listen(CONFIG.port, '127.0.0.1', () => {
+  console.log(`🚀 Daily System running at http://127.0.0.1:${CONFIG.port}`);
   console.log(`📁 Data: ${path.resolve(CONFIG.dataPath)}`);
 });
 

@@ -1,0 +1,17 @@
+{
+  "name": "@openclaw/daily-system",
+  "version": "0.1.0",
+  "description": "OpenClaw runtime plugin for daily-system service lifecycle tools",
+  "type": "module",
+  "openclaw": {
+    "extensions": [
+      "./index.ts"
+    ]
+  },
+  "moltbot": {
+    "extensions": [
+      "./index.ts"
+    ]
+  },
+  "license": "MIT"
+}

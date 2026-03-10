@@ -1,6 +1,6 @@
 # 部署操作文档
 
-## 快速启动（推荐）
+## 快速启动（推荐，local-first）
 
 ```bash
 bash {install_path}/deploy/start.sh
@@ -8,50 +8,52 @@ bash {install_path}/deploy/start.sh
 
 自动完成：
 - 启动 Node.js 服务器（端口 8888）
-- 启动 cloudflared tunnel（生成外网链接）
-- 输出本地地址 + 外网链接
+- 默认仅本地访问（`http://127.0.0.1:8888`）
+- 输出运行状态、日志路径和停止命令
 
-等待约 10 秒后，终端会输出类似：
+终端会输出类似：
 ```
-✅ 服务器运行正常
-📝 本地访问: http://localhost:8888
-🌐 外网链接: https://xxxx.trycloudflare.com
+✅ 启动完成
+MODE: local
+本地地址: http://127.0.0.1:8888
+访问地址: http://127.0.0.1:8888
 ```
 
-将外网链接发给用户即可。
+---
+
+## 外网模式（可选）
+
+```bash
+EXPOSE_MODE=tunnel bash {install_path}/deploy/start.sh
+```
+
+需要已安装 `cloudflared`。
 
 ---
 
 ## 停止服务
 
 ```bash
-# 停止服务器
-kill $(cat /tmp/diary-server.pid)
-
-# 或者直接找进程
-pkill -f "node server/server.js"
+bash {install_path}/deploy/stop.sh
 ```
 
 ---
 
-## 其他部署方式
-
-### 仅本地访问
+## 查看状态
 
 ```bash
-node {install_path}/server/server.js
-# 访问 http://localhost:8888
+bash {install_path}/deploy/status.sh
 ```
 
-### 仅外网（需先启动 server）
+---
+
+## 鉴权配置（可选）
 
 ```bash
-bash {install_path}/deploy/cloudflared.sh
+REQUIRE_API_AUTH=1 API_TOKEN=your-token bash {install_path}/deploy/start.sh
 ```
 
-### Docker 部署
-
-见 `deploy/DOCKER.md`
+启用后，`/api/*` 需要 `Authorization: Bearer <token>`。
 
 ---
 
@@ -61,5 +63,5 @@ bash {install_path}/deploy/cloudflared.sh
 |------|----------|
 | 端口 8888 被占用 | 修改 `server/server.js` 中 `CONFIG.port` |
 | 外网链接不出现 | 等待 15 秒，cloudflared 初始化较慢 |
-| 服务器启动失败 | 查看 `cat /tmp/diary-server.log` |
+| 服务器启动失败 | 查看 `/tmp/daily-system/server.log` |
 | Node.js 未安装 | `brew install node` 或访问 nodejs.org |
