@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [1.5.0] - 2026-03-11
+
+### 新增
+- Runtime 插件新增 `daily_self_check` 一键自检工具（脚本、workspace、heartbeat、白板、runtime 状态）
+- `daily_self_check` 支持 `autoFix=true` 自动修复 `HEARTBEAT.md` 与白板文件
+
+### 修改
+- README 与 extension 文档新增“自检流程”和上线前检查建议
+
 ## [1.4.0] - 2026-03-11
 
 ### 新增

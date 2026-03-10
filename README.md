@@ -84,6 +84,7 @@ OpenClaw Plugin，命名空间 `daily`，5 个 Skill：
 - `daily_get_link`
 - `daily_stop_service`
 - `daily_apply_schedule`
+- `daily_self_check`
 - `daily_board_publish`
 - `daily_board_list`
 - `daily_board_claim`
@@ -98,6 +99,7 @@ OpenClaw Plugin，命名空间 `daily`，5 个 Skill：
 5. `daily_stop_service` 调用 `deploy/stop.sh` 回收进程。
 6. `daily_apply_schedule` 从 `workspace/config.json` 生成或更新 `workspace/HEARTBEAT.md`。
 7. `daily_board_*` 将可执行项写入共享白板（`boardPath`），供多 agent 领取和完成。
+8. `daily_self_check` 提供一键可用性检查，可选 `autoFix` 修复 heartbeat 与白板文件。
 
 ### 正确使用方式（推荐顺序）
 
@@ -106,6 +108,12 @@ OpenClaw Plugin，命名空间 `daily`，5 个 Skill：
 2) 若未运行 -> daily_start_service（默认 local，必要时 tunnel）
 3) daily_get_link（拿给用户的访问地址）
 4) 任务结束后 -> daily_stop_service（可选，按需回收）
+```
+
+上线前自检（推荐）：
+
+```text
+daily_self_check({ "autoFix": true })
 ```
 
 白板协作顺序（多 agent）：

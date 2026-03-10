@@ -68,6 +68,12 @@ interface GetLinkParams {
   includeApiToken?: boolean;
 }
 
+interface SelfCheckParams {
+  workspacePath?: string;
+  boardPath?: string;
+  autoFix?: boolean;
+}
+
 interface BoardTask {
   id: string;
   title: string;
@@ -91,6 +97,15 @@ interface BoardTask {
 interface BoardPaths {
   tasksFile: string;
   eventsFile: string;
+}
+
+interface HeartbeatBuildResult {
+  workspacePath: string;
+  configPath: string;
+  heartbeatPath: string;
+  morningTime: string;
+  nightlyTime: string;
+  content: string;
 }
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -190,6 +205,48 @@ function maskToken(token: string | undefined) {
   return `${token.slice(0, 3)}***${token.slice(-3)}`;
 }
 
+function buildHeartbeatContent(morningTime: string, nightlyTime: string, morningCommand: string, nightlyCommand: string) {
+  return [
+    "## 日记系统定时任务",
+    "",
+    `- ${morningTime} ${morningCommand}`,
+    `- ${nightlyTime} ${nightlyCommand}`,
+    "",
+  ].join("\n");
+}
+
+function prepareHeartbeatData(workspacePathRaw: string, morningCommand: string, nightlyCommand: string): HeartbeatBuildResult {
+  const workspacePath = resolvePathFromRoot(workspacePathRaw);
+  const configPath = path.join(workspacePath, "config.json");
+  const heartbeatPath = path.join(workspacePath, "HEARTBEAT.md");
+  if (!fs.existsSync(configPath)) {
+    throw new Error(`config.json not found: ${configPath}`);
+  }
+
+  let cfg: any;
+  try {
+    cfg = JSON.parse(fs.readFileSync(configPath, "utf8"));
+  } catch (e) {
+    throw new Error(`failed to parse config.json: ${String(e)}`);
+  }
+
+  const morningTime = cfg.morning_time;
+  const nightlyTime = cfg.nightly_time;
+  if (!morningTime || !nightlyTime) {
+    throw new Error(`config.json missing morning_time or nightly_time: ${configPath}`);
+  }
+
+  const content = buildHeartbeatContent(morningTime, nightlyTime, morningCommand, nightlyCommand);
+  return {
+    workspacePath,
+    configPath,
+    heartbeatPath,
+    morningTime,
+    nightlyTime,
+    content,
+  };
+}
+
 const StartParamsSchema = {
   type: "object",
   additionalProperties: false,
@@ -262,6 +319,25 @@ const ApplyScheduleParamsSchema = {
     dryRun: {
       type: "boolean",
       description: "只预览不写文件",
+    },
+  },
+};
+
+const SelfCheckParamsSchema = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    workspacePath: {
+      type: "string",
+      description: "workspace 路径，默认读取插件配置 workspacePath",
+    },
+    boardPath: {
+      type: "string",
+      description: "白板任务文件路径，默认读取插件配置 boardPath",
+    },
+    autoFix: {
+      type: "boolean",
+      description: "是否自动修复可修复项（HEARTBEAT 与白板文件）",
     },
   },
 };
@@ -495,53 +571,205 @@ const dailySystemPlugin = {
             if (!workspacePathRaw) {
               return toError("workspacePath is required (pass param or set plugin config.workspacePath)");
             }
-
-            const workspacePath = resolvePathFromRoot(workspacePathRaw);
-            const configPath = path.join(workspacePath, "config.json");
-            const heartbeatPath = path.join(workspacePath, "HEARTBEAT.md");
-            if (!fs.existsSync(configPath)) {
-              return toError("config.json not found", { configPath });
-            }
-
-            let cfg: any;
+            const morningCommand = params.morningCommand || "/daily:morning 早报";
+            const nightlyCommand = params.nightlyCommand || "/daily:tracker 晚间日记提醒";
+            let heartbeatData: HeartbeatBuildResult;
             try {
-              cfg = JSON.parse(fs.readFileSync(configPath, "utf8"));
+              heartbeatData = prepareHeartbeatData(workspacePathRaw, morningCommand, nightlyCommand);
             } catch (e) {
-              return toError("failed to parse config.json", { configPath, error: String(e) });
-            }
-
-            const morningTime = cfg.morning_time;
-            const nightlyTime = cfg.nightly_time;
-            if (!morningTime || !nightlyTime) {
-              return toError("config.json missing morning_time or nightly_time", {
-                configPath,
-                morning_time: morningTime,
-                nightly_time: nightlyTime,
+              return toError("failed to build heartbeat content", {
+                workspacePath: workspacePathRaw,
+                error: String(e),
               });
             }
 
-            const morningCommand = params.morningCommand || "/daily:morning 早报";
-            const nightlyCommand = params.nightlyCommand || "/daily:tracker 晚间日记提醒";
-            const content = [
-              "## 日记系统定时任务",
-              "",
-              `- ${morningTime} ${morningCommand}`,
-              `- ${nightlyTime} ${nightlyCommand}`,
-              "",
-            ].join("\n");
-
             if (!params.dryRun) {
-              fs.mkdirSync(workspacePath, { recursive: true });
-              fs.writeFileSync(heartbeatPath, content, "utf8");
+              fs.mkdirSync(heartbeatData.workspacePath, { recursive: true });
+              fs.writeFileSync(heartbeatData.heartbeatPath, heartbeatData.content, "utf8");
             }
 
             return toResult({
               ok: true,
-              workspacePath,
-              configPath,
-              heartbeatPath,
+              workspacePath: heartbeatData.workspacePath,
+              configPath: heartbeatData.configPath,
+              heartbeatPath: heartbeatData.heartbeatPath,
               written: !params.dryRun,
-              content,
+              content: heartbeatData.content,
+            });
+          },
+        },
+        { optional: false }
+      );
+
+      api.registerTool(
+        {
+          name: "daily_self_check",
+          description:
+            "Run one-click self check for scripts/workspace/heartbeat/board/runtime. Supports auto-fix for heartbeat and board file.",
+          parameters: SelfCheckParamsSchema,
+          async execute(_id: string, params: SelfCheckParams) {
+            const checks: Array<{
+              name: string;
+              ok: boolean;
+              level: "error" | "warn";
+              details: unknown;
+            }> = [];
+            const addCheck = (name: string, ok: boolean, details: unknown, level: "error" | "warn" = "error") => {
+              checks.push({ name, ok, level, details });
+            };
+            const autoFix = params.autoFix === true;
+
+            const scripts = [
+              { key: "start", p: startScript },
+              { key: "status", p: statusScript },
+              { key: "stop", p: stopScript },
+            ];
+            for (const script of scripts) {
+              const exists = fs.existsSync(script.p);
+              let executable = false;
+              if (exists) {
+                try {
+                  fs.accessSync(script.p, fs.constants.X_OK);
+                  executable = true;
+                } catch {
+                  executable = false;
+                }
+              }
+              addCheck(`script_${script.key}`, exists && executable, { path: script.p, exists, executable });
+            }
+
+            const statusRun = runBash(statusScript);
+            addCheck(
+              "status_command",
+              statusRun.status === 0,
+              {
+                exitCode: statusRun.status,
+                output: (statusRun.stdout || "").trim(),
+                stderr: (statusRun.stderr || "").trim(),
+              }
+            );
+
+            const workspacePathRaw = params.workspacePath || resolvedConfig.workspacePath;
+            let heartbeatData: HeartbeatBuildResult | null = null;
+            if (!workspacePathRaw) {
+              addCheck(
+                "workspace_path_config",
+                false,
+                { message: "workspacePath not configured (param or plugin config.workspacePath required)" },
+                "warn"
+              );
+            } else {
+              try {
+                heartbeatData = prepareHeartbeatData(
+                  workspacePathRaw,
+                  "/daily:morning 早报",
+                  "/daily:tracker 晚间日记提醒"
+                );
+                addCheck("workspace_config", true, {
+                  workspacePath: heartbeatData.workspacePath,
+                  configPath: heartbeatData.configPath,
+                  morningTime: heartbeatData.morningTime,
+                  nightlyTime: heartbeatData.nightlyTime,
+                });
+              } catch (e) {
+                addCheck("workspace_config", false, { workspacePath: workspacePathRaw, error: String(e) });
+              }
+            }
+
+            if (heartbeatData) {
+              const heartbeatExists = fs.existsSync(heartbeatData.heartbeatPath);
+              if (!heartbeatExists && autoFix) {
+                fs.mkdirSync(path.dirname(heartbeatData.heartbeatPath), { recursive: true });
+                fs.writeFileSync(heartbeatData.heartbeatPath, heartbeatData.content, "utf8");
+                addCheck("heartbeat_file", true, {
+                  heartbeatPath: heartbeatData.heartbeatPath,
+                  fixed: true,
+                  reason: "file created",
+                });
+              } else {
+                addCheck("heartbeat_file", heartbeatExists, { heartbeatPath: heartbeatData.heartbeatPath }, "warn");
+              }
+
+              if (fs.existsSync(heartbeatData.heartbeatPath)) {
+                const current = fs.readFileSync(heartbeatData.heartbeatPath, "utf8").trim();
+                const expected = heartbeatData.content.trim();
+                const matched = current === expected;
+                if (!matched && autoFix) {
+                  fs.writeFileSync(heartbeatData.heartbeatPath, heartbeatData.content, "utf8");
+                  addCheck("heartbeat_content", true, {
+                    heartbeatPath: heartbeatData.heartbeatPath,
+                    fixed: true,
+                    reason: "content updated",
+                  });
+                } else {
+                  addCheck("heartbeat_content", matched, { heartbeatPath: heartbeatData.heartbeatPath }, "warn");
+                }
+              }
+            }
+
+            const boardPaths = getBoardPaths(params.boardPath);
+            const boardDir = path.dirname(boardPaths.tasksFile);
+            let boardDirWritable = false;
+            try {
+              fs.mkdirSync(boardDir, { recursive: true });
+              const probe = path.join(boardDir, `.probe_${Date.now()}`);
+              fs.writeFileSync(probe, "ok", "utf8");
+              fs.rmSync(probe);
+              boardDirWritable = true;
+              addCheck("board_dir_write", true, { boardDir });
+            } catch (e) {
+              addCheck("board_dir_write", false, { boardDir, error: String(e) });
+            }
+
+            if (boardDirWritable) {
+              if (!fs.existsSync(boardPaths.tasksFile) && autoFix) {
+                fs.writeFileSync(boardPaths.tasksFile, "[]\n", "utf8");
+                addCheck("board_file", true, { boardPath: boardPaths.tasksFile, fixed: true, reason: "file created" });
+              } else if (!fs.existsSync(boardPaths.tasksFile)) {
+                addCheck("board_file", false, { boardPath: boardPaths.tasksFile }, "warn");
+              } else {
+                try {
+                  const parsed = JSON.parse(fs.readFileSync(boardPaths.tasksFile, "utf8"));
+                  addCheck("board_file", Array.isArray(parsed), {
+                    boardPath: boardPaths.tasksFile,
+                    isArray: Array.isArray(parsed),
+                    count: Array.isArray(parsed) ? parsed.length : null,
+                  });
+                } catch (e) {
+                  addCheck("board_file", false, { boardPath: boardPaths.tasksFile, error: String(e) });
+                }
+              }
+            }
+
+            const runtime = parseRuntimeEnv();
+            addCheck(
+              "runtime_metadata",
+              Object.keys(runtime).length > 0,
+              {
+                runtimeFile,
+                mode: runtime.EXPOSE_MODE || null,
+                url: runtime.URL || null,
+              },
+              "warn"
+            );
+
+            const failed = checks.filter((c) => !c.ok && c.level === "error").length;
+            const warned = checks.filter((c) => !c.ok && c.level === "warn").length;
+
+            return toResult({
+              ok: failed === 0,
+              autoFix,
+              summary: {
+                total: checks.length,
+                failed,
+                warned,
+              },
+              paths: {
+                systemRoot: resolvedConfig.systemRoot,
+                workspacePath: workspacePathRaw || null,
+                boardPath: boardPaths.tasksFile,
+              },
+              checks,
             });
           },
         },
@@ -722,7 +950,7 @@ const dailySystemPlugin = {
       );
 
       logger.info(
-        "[daily-system] tools registered: daily_start_service, daily_status, daily_get_link, daily_stop_service, daily_apply_schedule, daily_board_publish, daily_board_list, daily_board_claim, daily_board_complete"
+        "[daily-system] tools registered: daily_start_service, daily_status, daily_get_link, daily_stop_service, daily_apply_schedule, daily_self_check, daily_board_publish, daily_board_list, daily_board_claim, daily_board_complete"
       );
     } else {
       logger.warn("[daily-system] registerTool API unavailable");

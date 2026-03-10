@@ -9,6 +9,7 @@
 - `daily_get_link`
 - `daily_stop_service`
 - `daily_apply_schedule`
+- `daily_self_check`
 - `daily_board_publish`
 - `daily_board_list`
 - `daily_board_claim`
@@ -76,6 +77,27 @@ daily_apply_schedule
 ```
 
 读取 `workspace/config.json` 的 `morning_time/nightly_time`，更新 `workspace/HEARTBEAT.md`。
+
+### 一键自检
+
+```text
+daily_self_check
+```
+
+检查内容：
+- deploy 脚本是否存在且可执行
+- status 命令是否可运行
+- workspace/config 与 HEARTBEAT 一致性
+- 白板文件可写与格式合法性
+- runtime 元数据状态
+
+自动修复（建议首次执行）：
+
+```json
+{
+  "autoFix": true
+}
+```
 
 ### 白板协作
 
