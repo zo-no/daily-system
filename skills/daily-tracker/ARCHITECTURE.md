@@ -25,7 +25,7 @@
         ↓
   POST /api/submit
         ↓
-  server 存入 {daily-system}/data/diary/YYYY-MM-DD.json
+  server 存入 {install_path}/data/diary/YYYY-MM-DD.json
         ↓
   检查是否有 supplement:true 条目
     有 → 跳过 diary-builder
@@ -47,7 +47,7 @@
 ## 文件分布
 
 ```
-{daily-system}/               ← 项目代码（git 管理）
+{install_path}/               ← 项目代码（git 管理）
 ├── plugin.json               ← Plugin 清单
 ├── server/server.js          ← 后端服务
 ├── web/                      ← 打卡网页
