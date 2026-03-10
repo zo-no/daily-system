@@ -14,6 +14,7 @@ cd "$(dirname "$0")/.."
 node server/server.js > /tmp/diary-server.log 2>&1 &
 SERVER_PID=$!
 
+echo $SERVER_PID > /tmp/diary-server.pid
 echo "✅ 服务器已启动 (PID: $SERVER_PID)"
 sleep 2
 
@@ -41,4 +42,4 @@ echo "🎉 启动完成！"
 echo "📝 本地访问: http://localhost:8888"
 echo "🌐 外网链接: 查看上方输出"
 echo ""
-echo "停止服务: kill $SERVER_PID"
+echo "停止服务: kill \$(cat /tmp/diary-server.pid)"
