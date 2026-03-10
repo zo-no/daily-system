@@ -11,6 +11,14 @@
     "defaultExposeMode": {
       "label": "默认暴露模式",
       "help": "local=仅本地，tunnel=Cloudflare 外网"
+    },
+    "workspacePath": {
+      "label": "Daily Workspace 路径",
+      "help": "用于读取 config.json 并写入 HEARTBEAT.md"
+    },
+    "boardPath": {
+      "label": "白板任务文件路径",
+      "help": "多 agent 协作任务板，默认 /tmp/daily-system-board/tasks.json"
     }
   },
   "configSchema": {
@@ -31,6 +39,13 @@
           "tunnel"
         ],
         "default": "local"
+      },
+      "workspacePath": {
+        "type": "string"
+      },
+      "boardPath": {
+        "type": "string",
+        "default": "/tmp/daily-system-board/tasks.json"
       }
     }
   }

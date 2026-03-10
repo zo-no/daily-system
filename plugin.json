@@ -1,6 +1,6 @@
 {
   "name": "daily",
-  "version": "1.2.0",
+  "version": "1.4.0",
   "description": "极简日记系统 - 晚间记录 + 时间线整理 + 柳比歇夫复盘 + 早报待办",
   "repository": "https://github.com/zo-no/daily-system.git",
   "install": "README.md#首次安装流程",

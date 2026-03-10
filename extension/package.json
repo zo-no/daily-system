@@ -1,6 +1,6 @@
 {
   "name": "@openclaw/daily-system",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "OpenClaw runtime plugin for daily-system service lifecycle tools",
   "type": "module",
   "openclaw": {

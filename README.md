@@ -77,20 +77,27 @@ OpenClaw Plugin，命名空间 `daily`，5 个 Skill：
 
 ## Runtime Plugin（M2）
 
-运行时工具插件位于 `extension/`，负责把 daily-system 的“启动/状态/链接/停止”封装为可调用 tools。
+运行时工具插件位于 `extension/`，负责把 daily-system 的“服务生命周期 + 定时同步 + 白板协作”封装为可调用 tools。
 
 - `daily_start_service`
 - `daily_status`
 - `daily_get_link`
 - `daily_stop_service`
+- `daily_apply_schedule`
+- `daily_board_publish`
+- `daily_board_list`
+- `daily_board_claim`
+- `daily_board_complete`
 
 ### 插件是怎么运作的
 
-1. OpenClaw 启动时加载 `extension/index.ts`，注册上述 4 个 tool。
+1. OpenClaw 启动时加载 `extension/index.ts`，注册上述 tools。
 2. `daily_start_service` 实际调用 `deploy/start.sh`。
 3. `deploy/start.sh` 启动服务后会写入 `/tmp/daily-system/runtime.env`（URL、模式、端口、鉴权状态）。
 4. `daily_status` 与 `daily_get_link` 读取 `runtime.env` 返回结构化状态。
 5. `daily_stop_service` 调用 `deploy/stop.sh` 回收进程。
+6. `daily_apply_schedule` 从 `workspace/config.json` 生成或更新 `workspace/HEARTBEAT.md`。
+7. `daily_board_*` 将可执行项写入共享白板（`boardPath`），供多 agent 领取和完成。
 
 ### 正确使用方式（推荐顺序）
 
@@ -101,11 +108,21 @@ OpenClaw Plugin，命名空间 `daily`，5 个 Skill：
 4) 任务结束后 -> daily_stop_service（可选，按需回收）
 ```
 
+白板协作顺序（多 agent）：
+
+```text
+1) daily_board_publish（发布任务）
+2) daily_board_list（扫描待办）
+3) daily_board_claim（领取）
+4) daily_board_complete（回写结果）
+```
+
 ### 参数与模式建议
 
 - 默认使用 `local`：稳定、低风险、适合本机/内网。
 - 用户明确需要外网访问时再用 `tunnel`。
 - 需要保护 API 时，启动时传 `requireApiAuth=true`，必要时传入 `apiToken`。
+- `daily_get_link` 默认不返回明文 token；需要时显式 `includeApiToken=true`。
 - 不要在群聊明文回传 `apiToken`，只在 agent 内部使用。
 
 安装（开发链接模式）：

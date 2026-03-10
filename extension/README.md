@@ -8,6 +8,11 @@
 - `daily_status`
 - `daily_get_link`
 - `daily_stop_service`
+- `daily_apply_schedule`
+- `daily_board_publish`
+- `daily_board_list`
+- `daily_board_claim`
+- `daily_board_complete`
 
 ## 运作机制
 
@@ -39,7 +44,9 @@ openclaw plugins install -l ./extension
         "enabled": true,
         "config": {
           "systemRoot": "/Users/kualshown/Desktop/daily-system",
-          "defaultExposeMode": "local"
+          "defaultExposeMode": "local",
+          "workspacePath": "/Users/kualshown/.openclaw/agents/main/workspace",
+          "boardPath": "/tmp/daily-system-board/tasks.json"
         }
       }
     }
@@ -50,7 +57,8 @@ openclaw plugins install -l ./extension
 ## 说明
 
 - 插件默认读取 `/tmp/daily-system/runtime.env` 获取当前 URL/模式/token 信息。
-- 本插件只负责生命周期工具。策略和路由仍由 `skills/` 决定。
+- 白板默认路径：`/tmp/daily-system-board/tasks.json`（同目录写 `events.ndjson`）。
+- 本插件负责执行层（service/schedule/board）。策略和路由由 `skills/` 决定。
 
 ## 推荐调用顺序
 
@@ -60,6 +68,25 @@ daily_status
 -> daily_get_link
 -> daily_stop_service (optional)
 ```
+
+### 定时任务同步
+
+```text
+daily_apply_schedule
+```
+
+读取 `workspace/config.json` 的 `morning_time/nightly_time`，更新 `workspace/HEARTBEAT.md`。
+
+### 白板协作
+
+```text
+daily_board_publish
+-> daily_board_list
+-> daily_board_claim
+-> daily_board_complete
+```
+
+适用于多 agent 分发与领取可执行任务。
 
 ## 参数示例
 
@@ -86,5 +113,13 @@ daily_status
   "exposeMode": "local",
   "requireApiAuth": true,
   "apiToken": "your-token"
+}
+```
+
+返回 token（仅内部调用）：
+
+```json
+{
+  "includeApiToken": true
 }
 ```
