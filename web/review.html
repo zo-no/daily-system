@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>补充完善</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 520px; margin: 0 auto; padding: 20px 16px 40px;
+      background: #0d1117; color: #c9d1d9;
+    }
+
+    .header { text-align: center; margin-bottom: 24px; }
+    .header h1 { font-size: 20px; margin-bottom: 4px; }
+    .header .step { font-size: 12px; color: #8b949e; }
+
+    .back-btn {
+      background: none; border: 1px solid #30363d; color: #8b949e;
+      padding: 6px 14px; border-radius: 6px; cursor: pointer;
+      font-size: 13px; margin-bottom: 20px;
+    }
+    .back-btn:hover { border-color: #58a6ff; color: #58a6ff; }
+
+    /* 时间线预览 */
+    .timeline-preview {
+      background: #161b22; border-radius: 8px; padding: 16px; margin-bottom: 20px;
+    }
+    .timeline-preview h3 { font-size: 13px; color: #58a6ff; margin-bottom: 12px; }
+    .tl-item {
+      display: flex; gap: 10px; align-items: baseline;
+      font-size: 13px; padding: 3px 0;
+    }
+    .tl-time { color: #8b949e; min-width: 42px; font-variant-numeric: tabular-nums; }
+    .tl-text { color: #c9d1d9; }
+    .tl-supplement { color: #3fb950; font-style: italic; }
+    .tl-tag {
+      font-size: 10px; padding: 1px 6px; border-radius: 10px;
+      margin-left: 6px; vertical-align: middle;
+    }
+    .tag-blank  { background: #3d1f1f; color: #f85149; }
+    .tag-vague  { background: #3d2e1f; color: #d29922; }
+    .tag-deep   { background: #1f2d3d; color: #58a6ff; }
+
+    /* 追问卡片 */
+    .no-questions {
+      background: #161b22; border-radius: 8px; padding: 20px;
+      text-align: center; color: #3fb950; margin-bottom: 20px;
+    }
+    .no-questions p { font-size: 14px; }
+
+    .question-card {
+      background: #161b22; border-radius: 8px; padding: 16px;
+      margin-bottom: 14px; border-left: 3px solid #30363d;
+    }
+    .question-card.blank  { border-left-color: #f85149; }
+    .question-card.vague  { border-left-color: #d29922; }
+    .question-card.deep   { border-left-color: #58a6ff; }
+
+    .q-label { font-size: 12px; color: #8b949e; margin-bottom: 6px; }
+    .q-text  { font-size: 14px; color: #c9d1d9; margin-bottom: 12px; line-height: 1.5; }
+
+    .options { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
+    .option-btn {
+      background: #21262d; border: 1px solid #30363d;
+      color: #c9d1d9; padding: 9px 12px; border-radius: 6px;
+      cursor: pointer; text-align: left; font-size: 13px; transition: all 0.15s;
+    }
+    .option-btn:hover  { border-color: #58a6ff; }
+    .option-btn.selected { background: #1f3244; border-color: #58a6ff; color: #79c0ff; }
+
+    .custom-input {
+      width: 100%; background: #21262d; border: 1px solid #30363d;
+      color: #c9d1d9; padding: 9px 10px; border-radius: 6px; font-size: 13px;
+      margin-top: 4px;
+    }
+    .custom-input:focus { outline: none; border-color: #58a6ff; }
+
+    .skip-link {
+      font-size: 12px; color: #6e7681; cursor: pointer;
+      text-decoration: underline; display: inline-block; margin-top: 4px;
+    }
+    .skip-link:hover { color: #8b949e; }
+    .skipped { opacity: 0.4; }
+
+    /* 提交 */
+    .submit-btn {
+      width: 100%; background: #238636; color: white;
+      border: none; padding: 15px; border-radius: 8px;
+      font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 8px;
+    }
+    .submit-btn:hover { background: #2ea043; }
+    .submit-btn:disabled { background: #21262d; color: #6e7681; cursor: not-allowed; }
+
+    /* 成功 */
+    .success { text-align: center; padding: 60px 20px; display: none; }
+    .success h2 { color: #3fb950; font-size: 22px; margin-bottom: 10px; }
+    .success p  { color: #8b949e; font-size: 14px; margin-bottom: 20px; }
+    .report-btn {
+      background: #1f6feb; color: white; border: none;
+      padding: 12px 28px; border-radius: 8px; font-size: 15px;
+      cursor: pointer; font-weight: bold;
+    }
+    .report-btn:hover { background: #388bfd; }
+
+    .error-msg {
+      background: #3d1f1f; border: 1px solid #f85149; border-radius: 8px;
+      padding: 16px; text-align: center; display: none;
+    }
+    .error-msg p { color: #f85149; font-size: 14px; margin-bottom: 10px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>🔍 补充完善</h1>
+    <div class="step">第 2 步 / 共 2 步 · 填补时间空白</div>
+  </div>
+
+  <button class="back-btn" onclick="history.back()">← 返回修改</button>
+
+  <!-- 时间线预览 -->
+  <div class="timeline-preview">
+    <h3>📋 你的时间线</h3>
+    <div id="timelinePreview"></div>
+  </div>
+
+  <!-- 追问区 -->
+  <div id="questionsArea"></div>
+
+  <div class="error-msg" id="errorMsg">
+    <p id="errorText">提交失败，请检查网络后重试</p>
+    <button class="submit-btn" style="width:auto;padding:8px 20px;" onclick="doSubmit()">重试</button>
+  </div>
+
+  <button class="submit-btn" id="submitBtn" onclick="doSubmit()">✅ 完成，保存记录</button>
+
+  <!-- 成功状态 -->
+  <div class="success" id="successView">
+    <h2>✅ 记录已保存！</h2>
+    <p id="successDate"></p>
+    <button class="report-btn" id="reportBtn" onclick="goReport()">📊 查看今日分析</button>
+  </div>
+
+  <script>
+    // ── 读取草稿 ──────────────────────────────────────────────
+    const draft = JSON.parse(sessionStorage.getItem('diary-draft') || 'null');
+    if (!draft) {
+      document.body.innerHTML = '<div style="text-align:center;padding:60px;color:#f85149;">没有找到记录数据，请<a href="/" style="color:#58a6ff;">返回重新填写</a></div>';
+      throw new Error('no draft');
+    }
+
+    const { date, entries, mood, insight, tomorrow } = draft;
+
+    // ── 渲染时间线预览 ────────────────────────────────────────
+    function renderPreview(entries) {
+      const el = document.getElementById('timelinePreview');
+      el.innerHTML = entries.map(e => `
+        <div class="tl-item">
+          <span class="tl-time">${e.time}</span>
+          <span class="tl-text ${e.supplement ? 'tl-supplement' : ''}">${e.supplement ? '[补充] ' : ''}${e.text}</span>
+        </div>
+      `).join('');
+    }
+    renderPreview(entries);
+
+    // ── diary-builder 分析逻辑 ────────────────────────────────
+    const VAGUE_PATTERNS = [
+      /继续/, /弄完/, /排队/, /玩/, /搞定/, /处理/, /忙/, /弄/, /做了点/,
+      /随便/, /逛/, /看看/, /聊/, /待着/, /休息一下/
+    ];
+    const DEEP_PATTERNS = [
+      /写代码/, /编程/, /开发/, /学习/, /阅读/, /写作/, /设计/, /研究/,
+      /调试/, /debug/, /创作/, /复习/, /练习/
+    ];
+    // 睡眠时段：不追问
+    function isSleepGap(startHH, endHH) {
+      // 跨越 23:00-08:00 的长空白视为睡眠
+      if (endHH - startHH >= 6) {
+        if (startHH >= 22 || endHH <= 9) return true;
+      }
+      return false;
+    }
+
+    function analyzeEntries(entries) {
+      const questions = [];
+
+      for (let i = 0; i < entries.length; i++) {
+        const cur = entries[i];
+
+        // 1. 时间空白（与下一条的间隔）
+        if (i < entries.length - 1) {
+          const next = entries[i + 1];
+          const [h1, m1] = cur.time.split(':').map(Number);
+          const [h2, m2] = next.time.split(':').map(Number);
+          const gapMin = (h2 * 60 + m2) - (h1 * 60 + m1);
+
+          if (gapMin > 60 && !isSleepGap(h1, h2)) {
+            const gapH = Math.round(gapMin / 60 * 10) / 10;
+            questions.push({
+              type: 'blank',
+              id: `blank_${i}`,
+              label: `【时段空白】`,
+              text: `${cur.time}–${next.time}（约 ${gapH} 小时空白）这段时间在做什么？`,
+              afterIndex: i,
+              options: ['休息 / 午睡', '吃饭', '通勤 / 出行', '刷手机 / 娱乐', '其他（请填写）'],
+              allowCustom: true
+            });
+          }
+        }
+
+        // 2. 模糊记录
+        const isVague = VAGUE_PATTERNS.some(p => p.test(cur.text));
+        if (isVague) {
+          questions.push({
+            type: 'vague',
+            id: `vague_${i}`,
+            label: `【信息模糊】`,
+            text: `${cur.time} "${cur.text}" — 具体是什么？`,
+            entryIndex: i,
+            options: null,
+            allowCustom: true
+          });
+        }
+
+        // 3. 深度工作
+        const isDeep = DEEP_PATTERNS.some(p => p.test(cur.text));
+        if (isDeep) {
+          questions.push({
+            type: 'deep',
+            id: `deep_${i}`,
+            label: `【深度工作】`,
+            text: `${cur.time} "${cur.text}" — 具体产出是什么？遇到什么问题？`,
+            entryIndex: i,
+            options: null,
+            allowCustom: true
+          });
+        }
+      }
+
+      return questions;
+    }
+
+    const questions = analyzeEntries(entries);
+
+    // ── 渲染追问卡片 ──────────────────────────────────────────
+    const answers = {}; // id -> { selected, custom, skipped }
+
+    function renderQuestions(questions) {
+      const area = document.getElementById('questionsArea');
+
+      if (questions.length === 0) {
+        area.innerHTML = `
+          <div class="no-questions">
+            <p>✨ 时间线已很完整，无需补充</p>
+          </div>`;
+        return;
+      }
+
+      area.innerHTML = questions.map((q, idx) => `
+        <div class="question-card ${q.type}" id="card_${q.id}">
+          <div class="q-label">${q.label} · 问题 ${idx + 1}</div>
+          <div class="q-text">${q.text}</div>
+          ${q.options ? `
+            <div class="options" id="opts_${q.id}">
+              ${q.options.map((opt, oi) => `
+                <button class="option-btn" data-qid="${q.id}" data-oi="${oi}" onclick="selectOption('${q.id}', ${oi}, this)">
+                  ${String.fromCharCode(65 + oi)}. ${opt}
+                </button>
+              `).join('')}
+            </div>
+          ` : ''}
+          <input class="custom-input" id="custom_${q.id}"
+            placeholder="${q.options ? '或自定义填写…' : '请描述…'}"
+            oninput="onCustomInput('${q.id}', this.value)">
+          <span class="skip-link" onclick="skipQuestion('${q.id}')">跳过此问题</span>
+        </div>
+      `).join('');
+
+      // 初始化 answers
+      questions.forEach(q => { answers[q.id] = { selected: null, custom: '', skipped: false }; });
+    }
+
+    renderQuestions(questions);
+
+    function selectOption(qid, oi, btn) {
+      // 取消同组其他选中
+      document.querySelectorAll(`[data-qid="${qid}"]`).forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      answers[qid].selected = oi;
+      answers[qid].skipped = false;
+    }
+
+    function onCustomInput(qid, val) {
+      answers[qid].custom = val;
+      // 有自定义输入时取消选项选中
+      if (val.trim()) {
+        document.querySelectorAll(`[data-qid="${qid}"]`).forEach(b => b.classList.remove('selected'));
+        answers[qid].selected = null;
+      }
+      answers[qid].skipped = false;
+    }
+
+    function skipQuestion(qid) {
+      answers[qid].skipped = true;
+      const card = document.getElementById(`card_${qid}`);
+      card.classList.add('skipped');
+    }
+
+    // ── 合并补充到时间线 ──────────────────────────────────────
+    function buildFinalTimeline(entries, questions, answers) {
+      // 深拷贝原始条目
+      const result = entries.map(e => ({ ...e, supplement: false }));
+
+      questions.forEach(q => {
+        const ans = answers[q.id];
+        if (!ans || ans.skipped) return;
+
+        // 确定补充文字
+        let text = '';
+        if (ans.custom && ans.custom.trim()) {
+          text = ans.custom.trim();
+        } else if (ans.selected !== null && q.options) {
+          const opt = q.options[ans.selected];
+          if (opt === '其他（请填写）') return; // 没填自定义就跳过
+          text = opt;
+        } else {
+          return;
+        }
+
+        if (q.type === 'blank') {
+          // 在 afterIndex 之后插入补充条目
+          const cur = entries[q.afterIndex];
+          const next = entries[q.afterIndex + 1];
+          result.push({
+            time: cur.time + '–' + next.time,
+            text,
+            supplement: true
+          });
+        } else if (q.type === 'vague' || q.type === 'deep') {
+          // 在对应条目旁追加补充说明
+          result.push({
+            time: entries[q.entryIndex].time,
+            text: `[关于"${entries[q.entryIndex].text}"] ${text}`,
+            supplement: true
+          });
+        }
+      });
+
+      // 按时间排序（补充条目跟在原条目后）
+      result.sort((a, b) => {
+        const ta = a.time.split('–')[0];
+        const tb = b.time.split('–')[0];
+        if (ta === tb) return a.supplement ? 1 : -1;
+        return ta.localeCompare(tb);
+      });
+
+      return result;
+    }
+
+    // ── 提交 ─────────────────────────────────────────────────
+    async function doSubmit() {
+      document.getElementById('submitBtn').disabled = true;
+      document.getElementById('errorMsg').style.display = 'none';
+
+      const finalTimeline = buildFinalTimeline(entries, questions, answers);
+
+      const payload = {
+        date,
+        timeline: finalTimeline,
+        mood,
+        insight,
+        tomorrow
+      };
+
+      try {
+        const res = await fetch('/api/submit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (!res.ok) throw new Error('server error');
+
+        sessionStorage.removeItem('diary-draft');
+
+        // 更新预览为最终时间线
+        renderPreview(finalTimeline);
+
+        document.getElementById('submitBtn').style.display = 'none';
+        document.getElementById('successDate').textContent = `${date} 的记录已完整保存`;
+        document.getElementById('successView').style.display = 'block';
+      } catch (e) {
+        document.getElementById('errorText').textContent = '提交失败，请检查服务器是否运行后重试';
+        document.getElementById('errorMsg').style.display = 'block';
+        document.getElementById('submitBtn').disabled = false;
+      }
+    }
+
+    function goReport() {
+      window.location.href = `/report.html?date=${date}`;
+    }
+  </script>
+</body>
+</html>

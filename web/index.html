@@ -6,212 +6,225 @@
   <title>每日记录</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { 
+    body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      max-width: 500px; margin: 0 auto; padding: 20px;
+      max-width: 520px; margin: 0 auto; padding: 20px 16px 40px;
       background: #0d1117; color: #c9d1d9;
     }
-    h1 { text-align: center; margin-bottom: 20px; font-size: 20px; }
-    
-    .section { margin-bottom: 25px; padding: 15px; background: #161b22; border-radius: 8px; }
-    .section-title { font-size: 14px; color: #58a6ff; margin-bottom: 12px; }
-    
-    .entry {
-      display: flex; gap: 10px; margin-bottom: 10px; align-items: center;
+
+    .header { text-align: center; margin-bottom: 24px; }
+    .header h1 { font-size: 20px; margin-bottom: 4px; }
+    .header .step { font-size: 12px; color: #8b949e; }
+
+    .section {
+      margin-bottom: 20px; padding: 16px;
+      background: #161b22; border-radius: 8px;
     }
+    .section-title {
+      font-size: 13px; color: #58a6ff;
+      margin-bottom: 12px; font-weight: 600;
+    }
+    .optional { color: #8b949e; font-weight: normal; font-size: 11px; }
+
+    /* 日期 */
+    input[type="date"] {
+      width: 100%; background: #21262d; border: 1px solid #30363d;
+      color: #c9d1d9; padding: 10px; border-radius: 6px; font-size: 15px;
+    }
+
+    /* 时间线 */
+    .quick-btns { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+    .quick-btn {
+      background: #21262d; border: 1px solid #30363d;
+      color: #8b949e; padding: 5px 10px; border-radius: 14px;
+      font-size: 12px; cursor: pointer; user-select: none;
+    }
+    .quick-btn:hover { border-color: #58a6ff; color: #58a6ff; }
+
+    .entry { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; }
     .time-input {
-      width: 80px; background: #21262d; border: 1px solid #30363d;
-      color: #c9d1d9; padding: 10px; border-radius: 6px; font-size: 14px; text-align: center;
+      width: 82px; background: #21262d; border: 1px solid #30363d;
+      color: #c9d1d9; padding: 9px 6px; border-radius: 6px;
+      font-size: 14px; text-align: center;
     }
     .text-input {
       flex: 1; background: #21262d; border: 1px solid #30363d;
-      color: #c9d1d9; padding: 10px; border-radius: 6px; font-size: 14px;
+      color: #c9d1d9; padding: 9px 10px; border-radius: 6px; font-size: 14px;
     }
-    .text-input:focus, .time-input:focus { outline: none; border-color: #58a6ff; }
-    
-    .quick-btns { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px; }
-    .quick-btn {
-      background: #21262d; border: 1px solid #30363d;
-      color: #8b949e; padding: 6px 12px; border-radius: 16px;
-      font-size: 12px; cursor: pointer;
+    .del-btn {
+      background: none; border: none; color: #6e7681;
+      font-size: 18px; cursor: pointer; padding: 0 4px; line-height: 1;
     }
-    .quick-btn:hover { border-color: #58a6ff; color: #58a6ff; }
-    
+    .del-btn:hover { color: #f85149; }
+    .time-input:focus, .text-input:focus { outline: none; border-color: #58a6ff; }
+
+    .add-btn {
+      background: #21262d; border: 1px dashed #30363d;
+      color: #8b949e; padding: 9px; border-radius: 6px;
+      width: 100%; cursor: pointer; text-align: center; font-size: 13px;
+    }
+    .add-btn:hover { border-color: #58a6ff; color: #58a6ff; }
+
+    /* 心情 */
+    .mood-group { display: flex; justify-content: center; gap: 20px; }
+    .mood-btn {
+      background: #21262d; border: 2px solid #30363d;
+      width: 64px; height: 64px; border-radius: 50%;
+      cursor: pointer; font-size: 26px; transition: all 0.15s;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .mood-btn:hover { transform: scale(1.05); }
+    .mood-btn.selected { transform: scale(1.12); border-width: 3px; }
+    .mood-btn.high.selected  { border-color: #3fb950; background: #1f3d1f; }
+    .mood-btn.mid.selected   { border-color: #d29922; background: #3d2e1f; }
+    .mood-btn.low.selected   { border-color: #f85149; background: #3d1f1f; }
+
+    /* textarea */
     textarea {
       width: 100%; background: #21262d; border: 1px solid #30363d;
       color: #c9d1d9; padding: 10px; border-radius: 6px; font-size: 14px;
-      min-height: 60px; resize: vertical;
+      min-height: 64px; resize: vertical; line-height: 1.5;
     }
     textarea:focus { outline: none; border-color: #58a6ff; }
-    
+
+    /* input text */
     input[type="text"] {
       width: 100%; background: #21262d; border: 1px solid #30363d;
       color: #c9d1d9; padding: 10px; border-radius: 6px; font-size: 14px;
     }
     input[type="text"]:focus { outline: none; border-color: #58a6ff; }
-    
-    .mood-group { display: flex; justify-content: center; gap: 15px; margin-top: 10px; }
-    .mood-btn {
-      background: #21262d; border: 2px solid #30363d;
-      width: 60px; height: 60px; border-radius: 50%;
-      cursor: pointer; font-size: 24px; transition: all 0.2s;
-    }
-    .mood-btn.selected { transform: scale(1.1); border-width: 3px; }
-    .mood-btn.high.selected { border-color: #3fb950; background: #1f3d1f; }
-    .mood-btn.medium.selected { border-color: #d29922; background: #3d2e1f; }
-    .mood-btn.low.selected { border-color: #f85149; background: #3d1f1f; }
-    
-    .add-btn {
-      background: #21262d; border: 1px dashed #30363d;
-      color: #8b949e; padding: 10px; border-radius: 6px;
-      width: 100%; cursor: pointer; text-align: center; margin-bottom: 20px;
-    }
-    .add-btn:hover { border-color: #58a6ff; color: #58a6ff; }
-    
-    .submit-btn {
+
+    /* 提交 */
+    .next-btn {
       width: 100%; background: #238636; color: white;
-      border: none; padding: 16px; border-radius: 8px;
-      font-size: 16px; font-weight: bold; cursor: pointer;
+      border: none; padding: 15px; border-radius: 8px;
+      font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 8px;
     }
-    .submit-btn:hover { background: #2ea043; }
-    
-    .date-picker { margin-bottom: 20px; }
-    .date-picker input {
-      width: 100%; background: #21262d; border: 1px solid #30363d;
-      color: #c9d1d9; padding: 10px; border-radius: 6px;
-    }
-    
-    .success { text-align: center; padding: 40px; display: none; }
-    .success h2 { color: #3fb950; margin-bottom: 10px; }
-    
-    .optional { opacity: 0.6; font-size: 12px; }
+    .next-btn:hover { background: #2ea043; }
+    .next-btn:disabled { background: #21262d; color: #6e7681; cursor: not-allowed; }
+
+    .warn { color: #f85149; font-size: 12px; margin-top: 6px; display: none; }
   </style>
 </head>
 <body>
-  <h1>📓 每日记录</h1>
-  
-  <div class="date-picker">
+  <div class="header">
+    <h1>📓 每日记录</h1>
+    <div class="step">第 1 步 / 共 2 步 · 填写时间线</div>
+  </div>
+
+  <!-- 日期 -->
+  <div class="section">
+    <div class="section-title">📅 日期</div>
     <input type="date" id="dateInput">
   </div>
-  
-  <!-- 必填：时间线 -->
+
+  <!-- 时间线（必填） -->
   <div class="section">
-    <div class="section-title">⏰ 时间线（必填）</div>
+    <div class="section-title">⏰ 时间线 <span style="color:#f85149;font-size:11px;">必填</span></div>
     <div class="quick-btns">
-      <div class="quick-btn" onclick="quickAdd('06:00 起床')">06:00 起床</div>
-      <div class="quick-btn" onclick="quickAdd('07:00 起床')">07:00 起床</div>
-      <div class="quick-btn" onclick="quickAdd('08:00 起床')">08:00 起床</div>
-      <div class="quick-btn" onclick="quickAdd('09:00 通勤')">通勤</div>
-      <div class="quick-btn" onclick="quickAdd('10:00 工作')">工作</div>
-      <div class="quick-btn" onclick="quickAdd('12:00 午休')">午休</div>
-      <div class="quick-btn" onclick="quickAdd('18:00 下班')">下班</div>
-      <div class="quick-btn" onclick="quickAdd('22:00 睡觉')">睡觉</div>
+      <div class="quick-btn" onclick="quickAdd('06:30','起床')">06:30 起床</div>
+      <div class="quick-btn" onclick="quickAdd('07:00','起床')">07:00 起床</div>
+      <div class="quick-btn" onclick="quickAdd('08:00','起床')">08:00 起床</div>
+      <div class="quick-btn" onclick="quickAdd('09:00','通勤')">通勤</div>
+      <div class="quick-btn" onclick="quickAdd('10:00','工作')">工作</div>
+      <div class="quick-btn" onclick="quickAdd('12:00','午休')">午休</div>
+      <div class="quick-btn" onclick="quickAdd('13:30','工作')">下午工作</div>
+      <div class="quick-btn" onclick="quickAdd('18:00','下班')">下班</div>
+      <div class="quick-btn" onclick="quickAdd('22:30','睡觉')">睡觉</div>
     </div>
-    <div id="entries">
-      <div class="entry">
-        <input type="time" class="time-input" value="09:00">
-        <input type="text" class="text-input" placeholder="做什么？">
-      </div>
-    </div>
-    <div class="add-btn" onclick="addEntry()">+ 添加时间点</div>
+    <div id="entries"></div>
+    <div class="add-btn" onclick="addEntry()">＋ 添加时间点</div>
+    <div class="warn" id="timelineWarn">请至少填写一条时间记录</div>
   </div>
-  
-  <!-- 选填：心情 -->
+
+  <!-- 心情（选填） -->
   <div class="section">
-    <div class="section-title">😊 心情 <span class="optional">（选填）</span></div>
+    <div class="section-title">😊 今日心情 <span class="optional">（选填）</span></div>
     <div class="mood-group">
-      <div class="mood-btn high" onclick="selectMood(this, 'high')">🟢</div>
-      <div class="mood-btn medium" onclick="selectMood(this, 'medium')">🟡</div>
-      <div class="mood-btn low" onclick="selectMood(this, 'low')">🔴</div>
+      <div class="mood-btn high" onclick="selectMood(this,'high')" title="高效">🟢</div>
+      <div class="mood-btn mid"  onclick="selectMood(this,'mid')"  title="一般">🟡</div>
+      <div class="mood-btn low"  onclick="selectMood(this,'low')"  title="疲惫">🔴</div>
     </div>
   </div>
-  
-  <!-- 选填：感悟 -->
+
+  <!-- 感悟（选填） -->
   <div class="section">
     <div class="section-title">💭 今日感悟 <span class="optional">（选填）</span></div>
-    <textarea id="insight" placeholder="今天有什么想法？"></textarea>
+    <textarea id="insight" placeholder="今天有什么想法或收获？"></textarea>
   </div>
-  
-  <!-- 选填：成就 -->
-  <div class="section">
-    <div class="section-title">🎯 今日成就 <span class="optional">（选填）</span></div>
-    <textarea id="achievement" placeholder="今天最骄傲的事？"></textarea>
-  </div>
-  
-  <!-- 选填：明日计划 -->
+
+  <!-- 明日计划（选填） -->
   <div class="section">
     <div class="section-title">🚀 明日计划 <span class="optional">（选填）</span></div>
     <input type="text" id="tomorrow" placeholder="明天最重要的一件事">
   </div>
-  
-  <button class="submit-btn" onclick="submit()">🚀 提交记录</button>
-  
-  <div class="success" id="success">
-    <h2>✅ 已提交！</h2>
-    <p>数据已保存</p>
-  </div>
-  
+
+  <button class="next-btn" onclick="goNext()">下一步：补充完善 →</button>
+
   <script>
+    // 初始化日期
     const today = new Date();
-    document.getElementById('dateInput').value = 
-      `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
-    
-    function addEntry() {
-      const div = document.createElement('div');
-      div.className = 'entry';
-      div.innerHTML = '<input type="time" class="time-input"><input type="text" class="text-input" placeholder="做什么？">';
-      document.getElementById('entries').appendChild(div);
-    }
-    
-    function quickAdd(text) {
-      const div = document.createElement('div');
-      div.className = 'entry';
-      const [time, ...rest] = text.split(' ');
-      div.innerHTML = `<input type="time" class="time-input" value="${time}"><input type="text" class="text-input" value="${rest.join(' ')}">`;
-      document.getElementById('entries').appendChild(div);
-    }
-    
+    const pad = n => String(n).padStart(2, '0');
+    const todayStr = `${today.getFullYear()}-${pad(today.getMonth()+1)}-${pad(today.getDate())}`;
+    document.getElementById('dateInput').value = todayStr;
+
+    // 默认一条空记录
+    addEntry();
+
     let selectedMood = null;
+
+    function addEntry(time = '', text = '') {
+      const div = document.createElement('div');
+      div.className = 'entry';
+      div.innerHTML = `
+        <input type="time" class="time-input" value="${time}">
+        <input type="text" class="text-input" placeholder="做什么？" value="${text}">
+        <button class="del-btn" onclick="this.parentElement.remove()" title="删除">×</button>
+      `;
+      document.getElementById('entries').appendChild(div);
+      div.querySelector('.text-input').focus();
+    }
+
+    function quickAdd(time, text) {
+      addEntry(time, text);
+    }
+
     function selectMood(el, mood) {
       document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected'));
       el.classList.add('selected');
       selectedMood = mood;
     }
-    
-    async function submit() {
-      const date = document.getElementById('dateInput').value;
-      
-      // 收集时间线
-      const timeline = [];
+
+    function collectEntries() {
+      const entries = [];
       document.querySelectorAll('.entry').forEach(el => {
         const time = el.querySelector('.time-input').value;
-        const text = el.querySelector('.text-input').value;
-        if (time && text) timeline.push(`${time} ${text}`);
+        const text = el.querySelector('.text-input').value.trim();
+        if (time && text) entries.push({ time, text });
       });
-      
-      // 组装数据
-      const data = {
-        date: date,
-        timeline: timeline.join('\n'),
-        mood: selectedMood,
-        insight: document.getElementById('insight').value,
-        achievement: document.getElementById('achievement').value,
-        tomorrow: document.getElementById('tomorrow').value
-      };
-      
-      try {
-        await fetch('/api/diary', {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify(data)
-        });
-      } catch(e) {
-        console.log(e);
+      // 按时间排序
+      entries.sort((a, b) => a.time.localeCompare(b.time));
+      return entries;
+    }
+
+    function goNext() {
+      const entries = collectEntries();
+      if (entries.length === 0) {
+        document.getElementById('timelineWarn').style.display = 'block';
+        return;
       }
-      
-      document.querySelector('.section').style.display = 'none';
-      document.querySelector('.submit-btn').style.display = 'none';
-      document.getElementById('success').style.display = 'block';
+      document.getElementById('timelineWarn').style.display = 'none';
+
+      const data = {
+        date: document.getElementById('dateInput').value,
+        entries,
+        mood: selectedMood,
+        insight: document.getElementById('insight').value.trim(),
+        tomorrow: document.getElementById('tomorrow').value.trim()
+      };
+
+      sessionStorage.setItem('diary-draft', JSON.stringify(data));
+      window.location.href = '/review.html';
     }
   </script>
 </body>
