@@ -4,11 +4,25 @@
     "nightly_time": "HH:MM，晚间日记提醒时间",
     "poll_interval_minutes": "整数，轮询间隔（分钟），建议 30",
     "give_up_time": "HH:MM，超过此时间停止轮询，建议 01:00",
-    "style": "direct（犀利直接）或 gentle（温和鼓励）"
+    "style": "direct（犀利直接）或 gentle（温和鼓励）",
+    "reminders": "Array，提醒列表，由 /daily:reminder 自动管理",
+    "reminder_config": {
+      "enabled": "是否启用提醒",
+      "check_interval_minutes": "检查间隔（分钟）",
+      "sound_enabled": "是否启用语音",
+      "default_voice": "TTS 语音"
+    }
   },
   "morning_time": "08:00",
   "nightly_time": "22:30",
   "poll_interval_minutes": 30,
   "give_up_time": "01:00",
-  "style": "direct"
+  "style": "direct",
+  "reminders": [],
+  "reminder_config": {
+    "enabled": true,
+    "check_interval_minutes": 5,
+    "sound_enabled": true,
+    "default_voice": "Samantha"
+  }
 }
