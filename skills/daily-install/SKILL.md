@@ -22,11 +22,12 @@ git pull
 
 **不重新走配置流程**，保留现有 `{workspace}/config.json` 和 `{workspace}/diary/人生目标.md`。
 
-更新完成后告知用户：
-```
-日记系统已更新到最新版本 ✓
-配置和数据保持不变。
-```
+拉取完成后：
+
+1. 读取 `{install_path}/UPGRADING.md`
+2. 找到新版本号对应的章节（版本号在 `plugin.json` 的 `version` 字段）
+3. 执行该章节的「迁移操作」
+4. 将「告知用户」的话发给用户
 
 ---
 
