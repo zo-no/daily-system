@@ -1,93 +1,59 @@
 ---
 name: daily-tracker
-description: 完美日记系统 - 全天分散收集 + 极简网页打卡 + 自动分析 + 晚间反馈。唯一入口，统一管理。
+description: 日记系统收集层。负责定时问卡、提供打卡入口、接收数据并存入 workspace。是整套日记流程的唯一入口。
 ---
 
-# 📡 Daily Tracker - 完美日记系统
+# daily-tracker（日记收集）
 
-**定位:** 唯一入口，统一管理所有日记数据流
-**核心理念:** 让记录变得极简，让反思变得自然
+## 职责
 
----
+只做一件事：**把今天发生的事收集进来**。
 
-## 核心流程
-
-```
-全天分散收集 ─→ 极简网页打卡（三步式）─→ 自动处理 ─→ 晚间反馈
-```
+整理交给 diary-builder，分析交给 day-reflection。
 
 ---
 
-## 🌅 全天收集（主动问）
+## 定时任务
 
-| 时间 | 触发 | 内容 |
-|------|------|------|
-| 09:00 | 早安 | 今天 TOP 3 目标？ |
-| 12:00 | 午安 | 上午完成得怎样？ |
-| 15:00 | 下午好 | 卡在哪里了？ |
-| 21:00 | 晚安 | 自动汇总 + 分析 |
+Agent 在 heartbeat 时检查当前时间，按以下节点主动触发：
 
----
+| 时间 | 动作 |
+|------|------|
+| 09:00 | 发早安卡：「今天 TOP 3 目标是什么？」 |
+| 12:00 | 发午安卡：「上午完成得怎样？有没有卡住？」 |
+| 15:00 | 发下午卡：「现在在做什么？遇到什么阻碍？」 |
+| 21:00 | 晚间汇总：检查今天是否有打卡数据，触发整理+分析流程 |
 
-## 📱 网页打卡（三步式）
-
-服务器运行在 `daily-system/` 项目目录下（`node server/server.js`），默认端口 8888。
-
-**Step 1 — 填写时间线** (`/`)
-- 日期 + 时间线条目（快捷按钮 + 手动添加）
-- 心情、今日感悟、明日计划（选填）
-
-**Step 2 — 补充完善** (`/review.html`)
-- 前端自动分析时间线，按 diary-builder 规则生成追问
-- 用户回答后合并 `[补充]` 内容
-
-**Step 3 — 分析展示** (`/report.html?date=YYYY-MM-DD`)
-- 柳比歇夫六类时间统计 + 完整时间线
-- 纯展示，无需填写
+**每个节点只触发一次**（当天已触发过则跳过）。触发状态记录在 `{workspace}/diary/YYYY/MM/YYYY-MM-DD_state.json`。
 
 ---
 
-## 🔄 收到打卡数据后的处理流
+## 打卡入口
 
-```
-POST /api/submit 收到数据
-        ↓
-1. 保存到 workspace/diary/YYYY/MM/YYYY-MM-DD.json
-        ↓
-2. 可选：调用 /diary-builder 深度完善时间线
-        ↓
-3. 可选：调用 /day-reflection 分析统计
-        ↓
-4. 晚间反馈报告
-```
+用户发送 `/diary-link` 时：
+
+1. 检查 server 是否运行：`curl -s http://localhost:8888`
+2. 未运行则启动：`cd {daily-system目录} && node server/server.js &`
+3. 若需外网访问，启动 ngrok/cloudflare tunnel
+4. 返回链接给用户
+
+打卡网页是三步式流程：
+- **Step 1** `/`：填写时间线
+- **Step 2** `/review.html`：自动追问补全（diary-builder 规则）
+- **Step 3** `/report.html?date=YYYY-MM-DD`：展示分析结果
 
 ---
 
-## 📁 数据存储
+## 数据接收
 
-**存储位置由 agent 自主决定，存入 workspace 内合适的目录，并将实际路径记录到 MEMORY.md。**
+用户提交后，server 将数据存入 `{daily-system}/data/diary/YYYY-MM-DD.json`。
 
-推荐结构（可根据实际调整）：
+Agent 在 21:00 晚间汇总时：
+1. 读取 `{daily-system}/data/diary/YYYY-MM-DD.json`
+2. 写入 `{workspace}/diary/YYYY/MM/YYYY-MM-DD.json`
+3. 路径首次使用时记入 MEMORY.md
 
-```
-workspace/
-└── diary/
-    └── YYYY/
-        └── MM/
-            ├── YYYY-MM-DD.json        # 原始打卡数据（来自 /api/submit）
-            └── YYYY-MM-DD_AI生成.md   # diary-builder 完善后的版本（可选）
-```
-
-**首次使用时：**
-1. 在 workspace 内创建 `diary/YYYY/MM/` 目录
-2. 将实际绝对路径写入 `MEMORY.md`，格式示例：
-   ```
-   ## 日记数据路径
-   - 打卡数据：{workspace}/diary/YYYY/MM/YYYY-MM-DD.json
-   ```
-3. 后续直接从 MEMORY.md 读取路径，无需重新确认
-
-**数据格式**（来自 `/api/submit`）：
+**数据格式**：
 ```json
 {
   "date": "2026-03-10",
@@ -103,31 +69,25 @@ workspace/
 
 ---
 
-## 📋 命令清单
+## 晚间汇总流程（21:00）
+
+```
+1. 从 data/diary/ 读取今日数据 → 写入 workspace
+2. 调用 diary-builder（可选，用户未在网页完善时）
+3. 调用 day-reflection → 生成复盘报告
+4. 将复盘摘要发送给用户
+```
+
+若今天没有打卡数据，提醒用户填写，发送打卡链接。
+
+---
+
+## 命令
 
 | 命令 | 功能 |
 |------|------|
-| `/diary-link` | 获取打卡链接（启动服务器并返回访问地址） |
-| `/today` | 查看今天日记 |
+| `/diary-link` | 获取打卡链接 |
+| `/today` | 查看今天日记原始数据 |
 | `/yesterday` | 查看昨天日记 |
-| `/diary YYYY-MM-DD` | 查看指定日期日记 |
-| `/diary-builder` | 深度完善时间线（AI 追问版） |
-| `/reflect` | 柳比歇夫统计 + 深度复盘 |
-| `/nightly` | 晚间汇总报告 |
-
----
-
-## 🎯 设计原则
-
-1. **极简优先** - 最少输入，最大价值
-2. **主动督促** - 追着用户记，不是用户追着 AI
-3. **数据联动** - 一次填写，多处使用
-4. **按需扩展** - 需要时再调用深度分析
-5. **路径自治** - 存储路径由 agent 决定并记忆，不硬编码
-
----
-
-## 依赖 Skills
-
-- **diary-builder** - 完善柳比歇夫时间线（可选，手动或自动触发）
-- **day-reflection** - 深度分析统计（可选，手动或自动触发）
+| `/diary YYYY-MM-DD` | 查看指定日期 |
+| `/nightly` | 手动触发晚间汇总 |

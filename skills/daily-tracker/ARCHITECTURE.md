@@ -1,103 +1,98 @@
-# 📓 完美日记系统 - 架构设计
+# 日记系统架构
 
-## 核心目标
-
-**让记录变得极简，让反思变得自然**
-
----
-
-## 整体流程
+## 三层结构
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                      全天分散收集                            │
-├─────────────────────────────────────────────────────────────┤
-│  🌅 09:00         🌤️ 12:00        🌇 15:00        🌙 21:00 │
-│  问目标           问进度          问困难         自动汇总    │
-└──────────────────────────┬──────────────────────────────────┘
-                           ↓
-┌─────────────────────────────────────────────────────────────┐
-│                   网页打卡（三步式）                          │
-├─────────────────────────────────────────────────────────────┤
-│  Step 1: index.html  填写时间线 + 心情 + 感悟               │
-│              ↓                                               │
-│  Step 2: review.html  diary-builder 追问补充空白             │
-│              ↓                                               │
-│  Step 3: report.html  分析展示（纯读，无需填写）             │
-└──────────────────────────┬──────────────────────────────────┘
-                           ↓
-┌─────────────────────────────────────────────────────────────┐
-│                      自动处理流                              │
-├─────────────────────────────────────────────────────────────┤
-│  1. POST /api/submit → agent 保存到 workspace/diary/YYYY/MM/ │
-│  2. 可选：调用 diary-builder 深度完善                        │
-│  3. 可选：调用 day-reflection 分析                           │
-│  5. 晚间反馈报告                                            │
-└─────────────────────────────────────────────────────────────┘
+收集层  daily-tracker   → 问卡、打卡入口、存数据
+整理层  diary-builder   → 补全时间线空白
+分析层  day-reflection  → 统计 + 洞察 + 行动建议
 ```
 
 ---
 
-## Skill 清单
+## 完整数据流
 
-### 1. daily-tracker（核心入口）
-- 全天定时问卡
-- 接收网页打卡数据
-- 保存到 workspace，路径记入 MEMORY.md
-- 触发后续处理
-
-### 2. diary-builder（完善时间线）
-- 已在 `web/review.html` 实现为网页交互
-- AI skill 版本用于命令行深度追问
-- 原文神圣，仅追加 `[补充]` 标记
-
-### 3. day-reflection（分析）
-- 柳比歇夫六类时间统计
-- 模式洞察 + 身份检查 + 明日行动
-- 输出到 workspace，路径记入 MEMORY.md
+```
+定时问卡（09/12/15/21点）
+        ↓
+用户打开网页打卡（三步式）
+  Step1: 填写时间线
+  Step2: review.html 自动追问（diary-builder 规则）
+  Step3: report.html 展示
+        ↓
+POST /api/submit
+        ↓
+server 存入 {daily-system}/data/diary/YYYY-MM-DD.json
+        ↓
+21:00 agent 晚间汇总
+  → 读取数据，写入 workspace/diary/YYYY/MM/
+  → 调用 diary-builder（深度补全，可选）
+  → 调用 day-reflection（统计分析）
+  → 发送复盘摘要给用户
+```
 
 ---
 
-## 数据存储原则
-
-**路径由 agent 自主决定，记录到 MEMORY.md，不硬编码。**
+## 文件分布
 
 ```
-workspace/              ← agent 工作区根目录
+{daily-system}/               ← 项目代码（git 管理）
+├── server/server.js
+├── web/index.html
+├── web/review.html
+├── web/report.html
+└── data/diary/               ← server 临时存储
+
+{workspace}/                  ← agent 工作区（长期存储）
 └── diary/
     └── YYYY/
         └── MM/
-            ├── YYYY-MM-DD.json       ← 原始打卡数据
-            └── YYYY-MM-DD_AI生成.md  ← diary-builder 完善版（可选）
-```
-
-首次使用时 agent 创建目录并将路径写入 MEMORY.md，后续直接读取。
-
----
-
-## 文件清单
-
-```
-daily-system/
-├── server/server.js          # 后端：/api/submit + /api/report/:date
-├── web/
-│   ├── index.html            # Step 1: 填写时间线
-│   ├── review.html           # Step 2: 追问补充（diary-builder 规则）
-│   └── report.html           # Step 3: 分析展示
-└── skills/
-    ├── daily-tracker/        # 本文档
-    ├── diary-builder/        # 时间线完善规则
-    └── day-reflection/       # 深度分析规则
+            ├── YYYY-MM-DD.json          ← 原始打卡数据
+            ├── YYYY-MM-DD_AI生成.md     ← diary-builder 输出（可选）
+            ├── YYYY-MM-DD_复盘.md       ← day-reflection 输出
+            └── YYYY-MM-DD_state.json    ← 当天问卡触发状态
 ```
 
 ---
 
-## 使用方式
+## Heartbeat 配置
 
-| 操作 | 方式 |
-|------|------|
-| 打卡 | `/diary-link` 获取链接，打开网页三步完成 |
-| 查看 | `/today` / `/yesterday` / `/diary YYYY-MM-DD` |
-| 完善 | `/diary-builder` |
-| 复盘 | `/reflect` |
-| 晚报 | `/nightly` |
+在 `{workspace}/HEARTBEAT.md` 中添加以下任务，agent 会在每次 heartbeat 时检查并按时触发：
+
+```markdown
+## 日记系统定时任务
+
+- 09:00 daily-tracker 早安卡：问今日 TOP3 目标
+- 12:00 daily-tracker 午安卡：问上午进度
+- 15:00 daily-tracker 下午卡：问当前状态
+- 21:00 daily-tracker 晚间汇总：收集数据 → 整理 → 分析 → 反馈
+```
+
+---
+
+## 首次部署清单
+
+Agent 首次部署时按顺序执行：
+
+1. **启动 server**
+   ```bash
+   cd {daily-system目录}
+   node server/server.js &
+   ```
+
+2. **初始化 workspace 目录**
+   ```bash
+   mkdir -p {workspace}/diary/$(date +%Y)/$(date +%m)
+   ```
+
+3. **记录路径到 MEMORY.md**
+   ```
+   ## 日记系统路径
+   - daily-system 项目：{绝对路径}
+   - 日记数据：{workspace}/diary/YYYY/MM/YYYY-MM-DD.json
+   - 人生目标：{workspace}/docs/人生目标.md
+   ```
+
+4. **写入 HEARTBEAT.md**（见上方配置）
+
+5. **发送打卡链接给用户**，引导完成第一次打卡

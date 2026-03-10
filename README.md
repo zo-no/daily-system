@@ -1,266 +1,179 @@
-# 🤖 Daily System - AI Agent 部署指南
+# Daily System — AI Agent 部署指南
 
-**定位:** 这是一个给 AI Agent 看的项目文档，用于帮助 AI 理解、部署并教会人类使用这个日记系统。
-
----
-
-## 🎯 项目概述
-
-这是一个**极简日记系统**，包含：
-- 📱 网页界面（供人类填写）
-- 🔧 服务器后端（存储数据）
-- 🧠 OpenClaw Skills（AI 分析处理）
-- 📊 自动分析（柳比歇夫统计、洞察生成）
-
-**目标用户:** 想要记录日记但嫌麻烦的人类
-**你的角色:** AI Agent，负责部署、配置、教学
+**定位:** 给 AI Agent 看的项目文档，帮助 Agent 理解、部署并运维这个日记系统。
 
 ---
 
-## 🔍 系统架构（AI 需要理解的）
+## 项目概述
+
+一个极简个人日记系统，包含：
+- **网页界面**（三步式打卡，供用户填写）
+- **Node.js 服务器**（接收并临时存储数据）
+- **OpenClaw Skills**（AI 分析处理，数据最终存入 agent workspace）
+
+---
+
+## 系统架构
 
 ```
-人类用户 ──[填写]──> 网页界面
+用户 ──[填写]──> web/index.html（Step1）
                     ↓
-                服务器后端 ──[存储]──> 本地数据
+             web/review.html（Step2 diary-builder 追问）
                     ↓
-                OpenClaw Skills ──[处理]──> 分析结果
+             POST /api/submit
                     ↓
-                AI Agent ──[反馈]──> 人类用户
+             server.js 存入 data/diary/YYYY-MM-DD.json
+                    ↓
+             Agent 读取 → 存入 workspace/diary/YYYY/MM/
+                    ↓
+             diary-builder / day-reflection 分析
+                    ↓
+             web/report.html 展示 + 晚间反馈给用户
 ```
 
-### 组件说明
-1. **Web UI** (`web/`) - 人类填写界面
-2. **Server** (`server/`) - 接收和存储数据  
-3. **Skills** (`skills/`) - AI 处理逻辑
-4. **Data** (`data/`) - 存储所有数据
-
----
-
-## 🚀 部署流程（AI Agent 执行）
-
-### 阶段一：环境检查
-```bash
-# 检查 Node.js
-node --version  # 需要 >= 16
-
-# 检查 OpenClaw（如果用于 AI 分析）
-openclaw --version
-
-# 检查 git
-git --version
-```
-
-### 阶段二：项目部署
-```bash
-# 1. 克隆项目
-git clone https://github.com/zo-no/daily-system.git
-cd daily-system
-
-# 2. 创建数据目录
-mkdir -p data/{raw-logs,daily-tracker,zeno-diary}
-
-# 3. 配置服务器
-# 编辑 server/server.js 中的 CONFIG
-# 设置 dataPath 和 publicPath
-
-# 4. 启动服务器
-node server/server.js &
-
-# 5. 验证运行
-curl http://localhost:8888
-```
-
-### 阶段三：OpenClaw Skills 安装（如果需要 AI 分析）
-```bash
-# 1. 找到人类用户的 OpenClaw workspace
-# 通常位于: ~/.openclaw/agents/{agent-name}/workspace/
-
-# 2. 复制 skills
-cp -r skills/* ~/.openclaw/agents/{agent-name}/workspace/skills/
-
-# 3. 重启 OpenClaw
-openclaw restart
-```
-
----
-
-## 👤 人类用户配置（AI 需要指导的）
-
-### 基础配置
-```javascript
-// server/server.js 中的 CONFIG
-const CONFIG = {
-  port: 8888,                    // 端口号
-  dataPath: '/home/user/diary-data',  // 数据存储位置
-  publicPath: './web'            // 网页文件位置
-};
-```
-
-### 个性化配置（询问人类用户）
-1. **数据存储位置** - 数据存在哪里？
-2. **Obsidian 集成** - 是否同步到 Obsidian？
-3. **提醒时间** - 希望何时提醒记录？
-4. **外网访问** - 是否需要外网访问？
-
----
-
-## 📚 教学流程（AI 教人类）
-
-### 第一课：基本使用
-```
-AI: "我已经帮你部署好日记系统了！"
-人类: "怎么用？"
-
-AI: "很简单：
-1. 打开 http://localhost:8888
-2. 填写'时间 + 做什么'
-3. 点击提交
-4. 数据自动保存"
-```
-
-### 第二课：高级功能
-```
-AI: "系统还支持：
-- 柳比歇夫时间统计
-- 自动分类（工作/学习/关系等）
-- 晚间自动报告
-- Obsidian 同步
-你需要哪个？"
-```
-
-### 第三课：维护
-```
-AI: "系统维护：
-- 数据备份在 data/ 目录
-- 重启服务: node server/server.js
-- 查看日志: tail -f data/server.log"
-```
-
----
-
-## 🔧 故障排除（AI 需要知道的）
-
-### 常见问题
-1. **端口被占用** - 修改 server.js 中的端口
-2. **权限错误** - `chmod -R 755 data/`
-3. **OpenClaw 找不到 skills** - 检查 workspace 路径
-4. **网页无法访问** - 检查防火墙
-
-### 诊断命令
-```bash
-# 检查服务状态
-ps aux | grep "node server"
-
-# 检查端口
-netstat -tlnp | grep 8888
-
-# 检查数据目录
-ls -la data/
-
-# 检查日志
-tail -f data/server.log
-```
-
----
-
-## 📊 数据管理（AI 负责）
-
-### 数据位置
-- 原始记录: `data/raw-logs/{date}.txt`
-- 处理数据: `data/daily-tracker/{date}.json`
-- AI 日记: `data/zeno-diary/{date}.json`
-
-### 备份建议
-```bash
-# 每日自动备份
-crontab -e
-# 添加: 0 2 * * * tar -czf /backup/diary-$(date +\%Y\%m\%d).tar.gz /path/to/data
-```
-
----
-
-## 🔄 更新流程（AI 执行）
-
-```bash
-# 1. 备份当前数据
-tar -czf diary-backup-$(date +%Y%m%d).tar.gz data/
-
-# 2. 拉取更新
-git pull origin main
-
-# 3. 重启服务
-pkill -f "node server"
-node server/server.js &
-```
-
----
-
-## 🎪 使用场景示例（AI 可以建议的）
-
-### 场景一：时间管理
-```
-AI: "这个系统可以帮你统计时间分配。
-比如：工作占比、学习占比、休息占比。
-你需要吗？"
-```
-
-### 场景二：日记坚持
-```
-AI: "系统可以定时提醒你记录，
-避免忘记。设置提醒时间？"
-```
-
-### 场景三：团队协作
-```
-AI: "可以部署给团队使用，
-统一格式，便于管理。
-需要吗？"
-```
-
----
-
-## 📞 AI Agent 备忘
-
-### 关键信息需要询问人类
-1. **存储位置** - "数据存在哪里？"
-2. **访问方式** - "需要外网访问吗？"
-3. **集成需求** - "需要集成 Obsidian/Notion 吗？"
-4. **提醒偏好** - "希望何时提醒记录？"
-
-### 验证步骤
-1. 网页可访问: http://localhost:8888
-2. 数据可保存: 填写测试数据 → 检查 data/ 目录
-3. Skills 可运行: 测试 OpenClaw 命令
-
-### 成功标准
-- ✅ 人类可以打开网页填写
-- ✅ 数据正常保存
-- ✅ AI 可以分析数据
-- ✅ 系统稳定运行
-
----
-
-## 📁 项目结构（AI 需要了解的）
+### 文件结构
 
 ```
 daily-system/
-├── skills/           # OpenClaw Skills（AI 处理逻辑）
-│   ├── daily-tracker/    # 统一入口
-│   ├── diary-builder/    # 时间线完善
-│   ├── day-reflection/   # 深度分析
-│   └── zeno-diary-builder/ # AI 自我完善
-├── web/              # 网页界面（人类填写）
-│   ├── log.html      # 极简记录
-│   ├── checkin.html  # 完整打卡
-│   └── zeno-diary.html # AI 日记完善
-├── server/           # 服务器后端
-│   └── server.js     # 服务器代码
-├── data/             # 数据存储（部署时创建）
-├── docs/             # 文档
-└── README.md         # 此文件（给 AI 看）
+├── server/server.js          # 后端：接收打卡数据，提供分析 API
+├── web/
+│   ├── index.html            # Step 1：填写时间线
+│   ├── review.html           # Step 2：diary-builder 追问补充
+│   └── report.html           # Step 3：柳比歇夫统计展示
+├── skills/
+│   ├── daily-tracker/        # 主入口 skill（本系统核心）
+│   ├── diary-builder/        # 时间线完善规则
+│   └── day-reflection/       # 深度分析规则
+├── data/                     # server 临时存储（部署时自动创建）
+│   └── diary/                # 打卡数据 YYYY-MM-DD.json
+└── docs/DEPLOYMENT.md        # 详细部署文档
 ```
 
 ---
 
-**记住：** 你是 AI Agent，这个文档是帮你理解如何部署这个系统给人类用户使用的。
+## 部署流程
+
+### 第一步：环境检查
+
+```bash
+node --version   # 需要 >= 16
+git --version
+```
+
+### 第二步：启动服务器
+
+```bash
+git clone https://github.com/zo-no/daily-system.git
+cd daily-system
+node server/server.js
+# 服务运行在 http://localhost:8888
+```
+
+服务器会自动创建 `data/diary/` 目录，无需手动创建。
+
+### 第三步：安装 Skills 到 workspace
+
+```bash
+# 找到 agent 的 workspace 路径（通常在 ~/.openclaw/agents/{name}/workspace/）
+# 将 skills 复制过去
+cp -r skills/* {workspace}/skills/
+```
+
+### 第四步：初始化 workspace
+
+Agent 首次部署时执行（详见 `skills/daily-tracker/ARCHITECTURE.md` 首次部署清单）：
+
+1. 在 workspace 创建 `diary/YYYY/MM/` 目录
+2. 将路径写入 MEMORY.md
+3. 在 HEARTBEAT.md 中添加定时任务（09/12/15/21 点问卡）
+4. 发打卡链接给用户，引导第一次打卡
+
+**HEARTBEAT.md 配置**（复制到 `{workspace}/HEARTBEAT.md`）：
+```markdown
+## 日记系统定时任务
+
+- 09:00 daily-tracker 早安卡：问今日 TOP3 目标
+- 12:00 daily-tracker 午安卡：问上午进度
+- 15:00 daily-tracker 下午卡：问当前状态
+- 21:00 daily-tracker 晚间汇总：收集数据 → 整理 → 分析 → 反馈
+```
+
+---
+
+## API 说明
+
+| 方法 | 路径 | 功能 |
+|------|------|------|
+| `POST` | `/api/submit` | 接收完整打卡数据（含补充时间线） |
+| `GET` | `/api/report/:date` | 返回指定日期的分析数据 JSON |
+| `GET` | `/api/dates` | 列出所有有记录的日期 |
+| `GET` | `/*` | 静态文件（web/ 目录） |
+
+**数据格式**（`/api/submit` 接收 / `/api/report/:date` 返回）：
+
+```json
+{
+  "date": "2026-03-10",
+  "timeline": [
+    { "time": "09:00", "text": "起床", "supplement": false },
+    { "time": "09:00–10:00", "text": "通勤", "supplement": true }
+  ],
+  "mood": "high",
+  "insight": "今天效率不错",
+  "tomorrow": "完成项目文档"
+}
+```
+
+---
+
+## Agent 工作流
+
+### 日常数据流转
+
+```
+1. 用户通过网页打卡 → server 存入 data/diary/YYYY-MM-DD.json
+2. Agent 在晚间汇总时读取该文件
+3. Agent 将数据存入 workspace/diary/YYYY/MM/YYYY-MM-DD.json
+4. Agent 调用 diary-builder（可选）完善时间线
+5. Agent 调用 day-reflection 生成分析
+6. Agent 将复盘结果反馈给用户
+```
+
+### Skill 调用顺序
+
+```
+daily-tracker（入口）
+    ↓
+diary-builder（完善时间线，可选）
+    ↓
+day-reflection（统计分析）
+```
+
+### `/diary-link` 实现
+
+Agent 收到此命令时：
+1. 确认 server 是否在运行（`curl http://localhost:8888`）
+2. 若未运行，执行 `node server/server.js &` 启动
+3. 若需要外网访问，启动 ngrok/cloudflare tunnel 并获取公网地址
+4. 将访问链接发送给用户
+
+---
+
+## 故障排除
+
+| 问题 | 解决方式 |
+|------|----------|
+| 端口 8888 被占用 | 修改 `server/server.js` 中 `CONFIG.port` |
+| 网页无法访问 | 检查 `ps aux \| grep "node server"` |
+| 数据未保存 | 检查 `data/diary/` 目录是否存在 |
+| Skills 找不到 | 检查 workspace/skills/ 路径是否正确 |
+
+---
+
+## 验证清单
+
+- [ ] `http://localhost:8888` 可以访问
+- [ ] 填写时间线并提交，`data/diary/` 下生成 JSON 文件
+- [ ] `http://localhost:8888/report.html?date=今天日期` 可以展示分析
+- [ ] workspace/skills/ 下有 daily-tracker、diary-builder、day-reflection
+- [ ] workspace/MEMORY.md 记录了日记数据路径
