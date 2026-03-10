@@ -1,0 +1,49 @@
+{
+  "name": "daily",
+  "version": "1.1.0",
+  "description": "极简日记系统 - 晚间记录 + 时间线整理 + 柳比歇夫复盘 + 早报待办",
+  "repository": "https://github.com/zo-no/daily-system.git",
+  "install": "skills/daily-install/SKILL.md",
+  "skills": [
+    {
+      "name": "install",
+      "path": "skills/daily-install/SKILL.md",
+      "command": "/daily:install",
+      "description": "一键安装：clone 代码、启动服务器、收集用户习惯、初始化 workspace"
+    },
+    {
+      "name": "tracker",
+      "path": "skills/daily-tracker/SKILL.md",
+      "command": "/daily:tracker",
+      "description": "日记收集层：晚间提醒、轮询等待、数据存储、触发后续流程"
+    },
+    {
+      "name": "builder",
+      "path": "skills/diary-builder/SKILL.md",
+      "command": "/daily:builder",
+      "description": "时间线整理层：补全空白、追问细节"
+    },
+    {
+      "name": "reflect",
+      "path": "skills/day-reflection/SKILL.md",
+      "command": "/daily:reflect",
+      "description": "分析层：柳比歇夫统计、模式洞察、行动建议、动态更新人生目标"
+    },
+    {
+      "name": "morning",
+      "path": "skills/daily-morning/SKILL.md",
+      "command": "/daily:morning",
+      "description": "早报层：基于昨日复盘，推荐今日待办"
+    }
+  ],
+  "heartbeat": {
+    "_note": "时间从 workspace/config.json 读取，由 agent 首次部署时写入 HEARTBEAT.md",
+    "morning": "/daily:morning 早报",
+    "nightly": "/daily:tracker 晚间日记提醒"
+  },
+  "config": "workspace/config.json",
+  "server": {
+    "start": "deploy/start.sh",
+    "port": 8888
+  }
+}

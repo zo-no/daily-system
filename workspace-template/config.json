@@ -1,0 +1,14 @@
+{
+  "_schema": {
+    "morning_time": "HH:MM，早报发送时间",
+    "nightly_time": "HH:MM，晚间日记提醒时间",
+    "poll_interval_minutes": "整数，轮询间隔（分钟），建议 30",
+    "give_up_time": "HH:MM，超过此时间停止轮询，建议 01:00",
+    "style": "direct（犀利直接）或 gentle（温和鼓励）"
+  },
+  "morning_time": "08:00",
+  "nightly_time": "22:30",
+  "poll_interval_minutes": 30,
+  "give_up_time": "01:00",
+  "style": "direct"
+}
