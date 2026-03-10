@@ -18,6 +18,7 @@ description: 日记系统更新与重装。首次安装流程见 README.md，本
 ```bash
 cd {install_path}
 git pull
+openclaw plugins install -l ./extension
 ```
 
 **不重新走配置流程**，保留现有 `{workspace}/config.json` 和 `{workspace}/diary/人生目标.md`。
@@ -44,6 +45,7 @@ cp {workspace}/diary/人生目标.md {workspace}/diary/人生目标.md.bak
 2. 重新拉取代码：
 ```bash
 cd {install_path} && git pull
+cd {install_path} && openclaw plugins install -l ./extension
 ```
 
 3. 重新走 README.md「首次安装流程」的 Step 4–6（收集习惯 + 写入配置 + 欢迎消息）。
